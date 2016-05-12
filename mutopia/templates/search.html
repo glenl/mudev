@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static from staticfiles %}
+
+{% block top_content %}
+<div class="container">
+  <div class="row">
+    <div class="col-sm-offset-1 col-sm-10 adv-search">
+      <h2>Advanced search</h2>
+      <div class="panel panel-default">
+        <form class="form-horizontal" action="/searchfor/" method="post">
+          {% csrf_token %}
+          {{ form }}
+          <>
+          <div class="panel-body adv-search-panel">
+            <div class="form-group">
+              <div class="input-group adv-search-btn-grp">
+                <input type="text" class="form-control" id="adv-search-for" name="searchingfor"
+                       placeholder="Keywords to search for ..." aria-describedby="btn-search-addon" >
+                <span class="input-group-btn adv-search-btn" id="btn-search-addon">
+                  <button class="btn btn-default btn-block">
+                    <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                  </button>
+                </span>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-4">
+{% endblock %}

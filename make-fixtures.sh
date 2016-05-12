@@ -1,0 +1,13 @@
+./manage.py dumpdata -o mutopia/fixtures/Composer.json mutopia.Composer
+./manage.py dumpdata -o mutopia/fixtures/Contributor.json mutopia.Contributor
+./manage.py dumpdata -o mutopia/fixtures/Style.json mutopia.Style
+./manage.py dumpdata -o mutopia/fixtures/LPVersion.json mutopia.LPVersion
+./manage.py dumpdata -o mutopia/fixtures/UpdateMarker.json mutopia.UpdateMarker
+./manage.py dumpdata -o mutopia/fixtures/Instrument.json mutopia.Instrument
+./manage.py dumpdata -o mutopia/fixtures/License.json mutopia.License
+./manage.py dumpdata -o mutopia/fixtures/Tag.json mutopia.Tag
+./manage.py dumpdata -o mutopia/fixtures/Piece.json mutopia.Piece
+./manage.py dumpdata -o mutopia/fixtures/AssetMap.json mutopia.AssetMap
+./manage.py dumpdata -o mutopia/fixtures/RawInstrumentMap.json mutopia.RawInstrumentMap
+./manage.py dumpdata -o mutopia/fixtures/Collection.json mutopia.Collection
+./manage.py dumpdata -o mutopia/fixtures/CollectionPiece.json mutopia.CollectionPiece

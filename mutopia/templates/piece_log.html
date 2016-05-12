@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static from staticfiles %}
+
+{% block content %}
+<div class="row">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+    <h2>Log file for {{piece.title}}</h2>
+    <h4>{{piece.composer.byline}}</h4>
+    </div>
+    <div class="panel-body">
+      {% comment %}
+      The 'safe' filter below manages to remove the email addresses
+      from contributor names in the github log.
+      {% endcomment %}
+      {{logfile.text|safe|linebreaks}}
+    </div>
+  </div>
+</div>
+{% endblock %}

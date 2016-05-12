@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static from staticfiles %}
+
+{% block content %}
+<div class="row">
+  <!-- main body -->
+  <div class="col-sm-12">
+    {% if not page %}
+    <div class="alert alert-warning" role="alert">
+      <strong>Failed Search</strong> - {{message}}. Please try again.
+    </div>
+    {% else %}
+    <div class="row">
+      {% include "page_nav.html" %}
+    </div>
+    <div class="row">
+      <h2>Search results</h2>
+      <ul>
+        {% for piece in page %}
+        <li><a href="{% url 'piece-info' piece.piece_id %}">{{piece.title}}</a>
+          {% if piece.opus %}, {{piece.opus}}{% endif %}
+          {% if piece.date_composed %}, composed in {{piece.date_composed}}{% endif %}
+          ,{{piece.composer.byline}} for {{piece.raw_instrument}}.<br />
+          {{piece.style}}, published {{piece.date_published}}.
+        </li>
+        {% empty %}
+        <p>No hits for this search.</p>
+        {% endfor %}
+      </ul>
+      <p class="timer">Search time: {{search_time}}s.</p>
+    </div>
+    <div class="row">
+      {% include "page_nav.html" %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static from staticfiles %}
+
+{% block page_title %}
+<title>Mutopia - Advanced Search</title>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-sm-offset-1 col-sm-10 adv-search">
+      <h2>Advanced search</h2>
+      <div class="panel panel-default">
+        <form class="form-horizontal" action="/adv-results/" method="get">
+          {% csrf_token %}
+          <div class="panel-body adv-search-panel">
+            <div class="form-group">
+              <div class="input-group adv-search-btn-grp">
+                <input type="text" class="form-control" id="adv-search-for" name="searchingfor"
+                       placeholder="Keywords to search for ..." aria-describedby="btn-search-addon" >
+                <span class="input-group-btn adv-search-btn" id="btn-search-addon">
+                  <button class="btn btn-default btn-block">
+                    <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                  </button>
+                </span>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-4">
+                <select name="composer" id="adv-composer-sel" class="form-control input-sm" placeholder="any composer">
+                  {% for c in composers %}
+                  <option value={{c.0}}>{{c.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-sm-4">
+                <select name="instrument" id="adv-instr-sel" class="form-control input-sm" placeholder="any instrument">
+                  {% for i in instruments %}
+                  <option value={{i.0}}>{{i.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-sm-2">
+                <select name="style" id="adv-style-sel" class="form-control input-sm" placeholder="any style">
+                  {% for s in styles %}
+                  <option value={{s.0}}>{{s.1}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox"name="solo" value="1" />
+                  Display only music for a solo performer (single instrument)
+                </label>
+                <div class="checkbox form-inline">
+                  <label>
+                    <input type="checkbox" name="recent" value="1" />
+                    Display only music that's been added or updated in the last
+                    <input type="number" name="timelength" value="1" min="1" class="form-control input-sm" />
+                    <select name="timeunit" class="form-control input-sm" placeholder="week(s)">
+                      {% for n in intervals %}
+                      <option value={{n.0}}>{{n.1}}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                </div>
+                <div class="checkbox form-inline">
+                  <label>
+                    <input type="checkbox" name="lilyv" value="1" />Display only music created with LilyPond version
+                    <input type="text" name="lilyversion" size="6" class="form-control input-sm" /> (can be more or less specific, e.g. '2' or '2.6' or '2.6.1')
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <div class="form-inline">
+              <button type="submit" class="btn btn-default">Search</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div> <!-- row -->
+</div> <!-- .container -->
+
+{% endblock %}

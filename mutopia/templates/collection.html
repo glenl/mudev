@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static from staticfiles %}
+
+{% block content %}
+<div class="row">
+  <!-- main body -->
+  <div class="col-sm-12">
+    <h2>{{title}}</h2>
+    <ul>
+    {% for col_piece in col_pieces %}
+    <li><a href="{% url 'piece-info' col_piece.piece_id %}">{{col_piece.title}}</a>
+      {% if col_piece.piece.opus %},{{col_piece.opus}},{% endif %}
+      {% if col_piece.date_composed %} composed in {{col_piece.date_composed}},{% endif %}
+      {{col_piece.composer.byline}} for {{col_piece.raw_instrument}}.
+    </li>
+    {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

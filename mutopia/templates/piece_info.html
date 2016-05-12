@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static from staticfiles %}
+
+{% block content %}
+<div class="row">
+  <!-- main body -->
+  <div class="panel panel-default">
+    <div class="panel-heading">
+    <h2>{{piece.title}}</h2>
+    <h4>{{piece.composer.byline}}</h4>
+    </div>
+    <div class="panel-body">
+      <div class="row preview-image">
+        <p><img src="{{preview_image}}" border="0" alt="Music preview" /></p>
+      </div>
+      <div class="row">
+        <dl class="dl-horizontal">
+          {% if collection %}
+          <dt>Collection</dt>
+          <dd><a href="{% url 'collection-list' collection.tag %}">{{ collection.title }}</a></dd>
+          {% endif %}
+          <dt>Instrument(s)</dt>
+          <dd>
+            {% for i in instruments %}
+            <a href="{% url 'piece-by-instrument' i %}">{{i}}</a>
+            {% if not forloop.last %},{% endif %}
+            {% empty %}None
+            {% endfor %}
+          </dd>
+          <dt>Style</dt>
+          <dd><a href="{% url 'piece-by-style' piece.style|slugify %}">{{piece.style}}</a></dd>
+          {% if piece.opus %}
+          <dt>Opus</dt>
+          <dd>{{piece.opus}}</dd>
+          {% endif %}
+          <dt>Date of composition</dt>
+          <dd>{{piece.date_composed|default:"Not known"}}</dd>
+          <dt>Source</dt>
+          <dd>{{piece.source}}</dd>
+          <dt>Copyright</dt>
+          <dd><a href="{% url 'legal' %}">{{piece.license.name}}</a></dd>
+          <dt>Last updated</dt>
+          <dd>{{piece.date_published|date:"Y/m/d"}}. <a href="{% url 'piece-log' piece.piece_id %}"> View change history</a></dd>
+          <dt>Music ID Number</dt>
+          <dd>{{piece.date_published|date:"Y/m/d"}}-{{piece.piece_id}}</dd>
+          <dt>Typeset using</dt>
+          <dd><a href="lilypond.org">LilyPond</a> version <a href="{% url 'piece-by-version' piece.version %}">{{piece.version}}</a></dd>
+          <dt>Maintainer</dt>
+          <dd>{{piece.maintainer.name}} <em>{{piece.maintainer.reformat_email}}</em></dd>
+          {% if piece.moreinfo %}
+          <dt></dt>
+          <dd><br/>
+            <div class="well well-sm more-info">
+              {% autoescape off %}{{piece.moreinfo}}{% endautoescape %}
+            </div>
+          </dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle"
+                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Download files <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+          <li><a href="{{asset.get_ly}}">LilyPond source{% if asset.has_lys %} (zipped){% endif %}</a></li>
+          <li><a href="{{asset.get_pdf_a4}}">A4 PDF{% if asset.has_lys %} (zipped){% endif %}</a></li>
+          <li><a href="{{asset.get_pdf_let}}">Letter PDF{% if asset.has_lys %} (zipped){% endif %}</a></li>
+          <li><a href="{{asset.get_ps_a4}}">A4 PostScript{% if asset.has_lys %} (zipped){% endif %}</a></li>
+          <li><a href="{{asset.get_ps_let}}">Letter PostScript{% if asset.has_lys %} (zipped){% endif %}</a></li>
+          <li><a href="{{asset.get_midi}}">MIDI{% if asset.has_lys %} (zipped){% endif %}</a></li>
+        </ul>
+      </div>
+      <span class="pull-right"><a href="{{piece.license.url}}"><img src="{% static "images/" %}{{piece.license.badge}}" width="90" /></a></span>
+    </div>
+  </div>
+</div>
+{% endblock %}

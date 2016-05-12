@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static from staticfiles %}
+
+{% block content %}
+<div class="row">
+  <!-- main body -->
+  <div class="col-sm-12">
+    <div class="row">
+      <h2>Browse by <a href="#byInstrument">instrument</a>, <a href="#byComposer">composer</a> or <a href="#byStyle">style</a></h2>
+      <p>Some pieces in the archive are organised into collections, a
+        list of which is immediately below. Click on any of the
+        collection titles to display all of the music in that
+        collection.</p>
+      <p>Below the collections are lists of instruments, composers and
+        musical styles. Click on any of these to display all the
+        relevant music in the archive. The numbers in square brackets
+        indicate how many pieces of music are available in each
+        section.</p>
+    </div>
+    <div class="row browse-list">
+      <ul>
+        {% for cols in collections %}
+        <div class="col-md-6">
+          {% for c in cols %}
+          <li><a href="{% url 'collection-list' c.tag %}">{{c.title}}</a></li>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="row"><h3><a name="byInstrument">Browse by Instrument</a></h3></div>
+    <div class="row browse-list">
+      <ul>
+        {% for icols in instruments %}
+        <div class="col-md-4">
+          {% for i in icols %}
+          <li><a href="{% url 'piece-by-instrument' i %}">{{i}}</a></li>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="row"><h3><a name="byStyle">Browse by Style</a></h3></div>
+    <div class="row browse-list">
+      <ul>
+        {% for scol in styles %}
+        <div class="col-md-4">
+          {% for s in scol %}
+          <li><a href="{% url 'piece-by-style' s|slugify %}">{{s}}</a></li>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="row"><h3><a name="byComposer">Browse by Composer</a></h3></div>
+    <div class="row browse-list">
+      <ul>
+        {% for ccols in composers %}
+        <div class="col-md-4">
+          {% for c in ccols %}
+          <li><a href="{% url 'piece-by-composer' c %}">{{c.rawstr}}</a></li>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

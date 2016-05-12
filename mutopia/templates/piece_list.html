@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block content %}
+<div class="row">
+  {% include "page_nav.html" %}
+</div>
+<div class="row">
+  <!-- main body -->
+  <div class="col-sm-12">
+    <h2>{% block headline %}{% endblock %}</h2>
+    <ul>
+      {% for piece in page %}
+      <li><a href="{% url 'piece-info' piece.piece_id %}">{{piece.title}}</a>
+        {% if piece.opus|length > 0 %}, {{piece.opus}}{% endif %}
+        {% if piece.date_composed|length > 0 %}, {{piece.date_composed}}{% endif %}
+        {% block by_line %}, {{piece.composer.byline}}{% endblock %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+<div class="row">
+  {% include "page_nav.html" %}
+</div>
+{% endblock %}

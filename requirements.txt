@@ -1,0 +1,9 @@
+dj-database-url==0.4.1
+Django==1.9.6
+gunicorn==19.4.5
+isodate==0.5.4
+psycopg2==2.6.1
+pyparsing==2.1.1
+rdflib==4.2.1
+requests==2.10.0
+whitenoise==3.0
