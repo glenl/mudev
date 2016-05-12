@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,7 +25,7 @@ SECRET_KEY = '*joliphfw&jhh(eyf#y#)=1_%=%@g(&^i&*&dsfd=^w7if5_ol'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'lola', 'localhost']
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -75,21 +76,7 @@ WSGI_APPLICATION = 'mudev.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mutopiadb',
-        'USER': 'muuser',
-        'PASSWORD': 'mumusic',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
-    },
-    'prev-default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
+DATABASES['default'] = dj_database_url.config()
 
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
@@ -142,5 +129,5 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 #X_FRAME_OPTIONS = 'DENY'
 #SECURE_CONTENT_TYPE_NOSNIFF = True
 #SECURE_BROWSER_XSS_FILTER = True
-SECURE_SSL_REDIRECT = False
-SECURE_REDIRECT_EXEMPT = ['localhost', '127.0.0.1', 'lola']
+#SECURE_SSL_REDIRECT = False
+#SECURE_REDIRECT_EXEMPT = ['localhost', '127.0.0.1', 'lola']
