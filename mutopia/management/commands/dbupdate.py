@@ -225,10 +225,10 @@ class Command(BaseCommand):
             rdfset = self.rdfset_since(auth, marker)
             if options['asset_write']:
                 self.update_assets(rdfset)
-
             else:
                 for rdf in rdfset:
                     self.stdout.write('  skipped {0}'.format(rdf))
+
             new_marker = UpdateMarker(updated_on=timezone.now())
             new_marker.save()
 

@@ -40,7 +40,7 @@ def homepage(request):
         'pieces' : Piece.objects.count(),
         'collections' : Collection.objects.all()[:14],
     }
-    return render(request, 'index.html', context);
+    return render(request, 'index.html', context)
 
 
 def adv_search(request):
@@ -181,7 +181,7 @@ def key_results(request):
             return render(request, 'results.html', context)
 
     # default is to return to page?
-    return HttpResponseRedirect('/')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
 
 
 def adv_results(request):
