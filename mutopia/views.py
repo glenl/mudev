@@ -130,58 +130,60 @@ def fts_search(keywords):
     muPiece table (model.Piece). This gets translated into a QuerySet
     of Pieces using a filter.
     """
-    try:
-        cursor = connection.cursor()
-        if re.search('[\(&\)\|\-!]', keywords) is not None:
-            # the user is using fts query logic so use the string as is
-            cursor.execute(_PG_FTSQ.format(keywords))
-        else:
-            # Assume the user wants to logically AND all keywords
-            k = keywords.split()
-            cursor.execute(_PG_FTSQ.format(' & '.join(k)))
+    cursor = connection.cursor()
+    if re.search('[\(&\)\|\-!]', keywords) is not None:
+        # the user is using fts query logic so use the string as is
+        cursor.execute(_PG_FTSQ.format(keywords))
+    else:
+        # Assume the user wants to logically AND all keywords
+        k = keywords.split()
+        cursor.execute(_PG_FTSQ.format(' & '.join(k)))
 
-        # Get the results as a simple list of ids for the filter
-        results = [ row[0] for row in cursor.fetchall() ]
-        return Piece.objects.filter(pk__in=results)
-    except ProgrammingError:
-        return None
+    # Get the results as a simple list of ids for the filter
+    results = [ row[0] for row in cursor.fetchall() ]
+    return Piece.objects.filter(pk__in=results)
 
 
+KEYWORD_TAG = 'kquery'
 def key_results(request):
-    if request.method == 'GET':
+    start_time = time.time()
+
+    page = request.GET.get('page')
+    if page is None:
         form = KeySearchForm(request.GET)
         if form.is_valid():
-            start_time = time.time()
-            context = { 'page': None,
-                        'keyform': form,
-            }
             keywords = form.cleaned_data['keywords']
-            try:
-                q = fts_search(keywords)
-            except ProgrammingError:
-                context['message'] = 'Unable to parse keywords search terms'
+            request.session[KEYWORD_TAG] = keywords
+            request.session.set_test_cookie()
+    else:
+        keywords = request.session.get(KEYWORD_TAG, '')
+        if request.session.test_cookie_worked():
+            request.session.delete_test_cookie()
 
-            if q is None or q.count() < 1:
-                context['message'] = 'No pieces were returned with these search terms'
-            else:
-                paginator = Paginator(q, 25)
-                page = request.GET.get('page')
-                try:
-                    page = paginator.page(page)
-                except PageNotAnInteger:
-                    page = paginator.page(1)
-                except EmptyPage:
-                    page = paginator.page(paginator.num_pages)
+    try:
+        q = fts_search(keywords)
+    except ProgrammingError:
+        context = { 'message': 'Unable to parse keywords search terms',
+                    'keyform': KeySearchForm(),
+        }
+        return render(request, 'results.html', context)
 
-                context['page'] = page
+    paginator = Paginator(q, 25)
+    try:
+        pieces = paginator.page(page)
+    except PageNotAnInteger:
+        pieces = paginator.page(1)
+    except EmptyPage:
+        pieces = paginator.page(paginator.num_pages)
 
-            end_time = time.time()
-            context['keywords'] = keywords
-            context['search_time'] = '%2.4g' % (end_time - start_time)
-            return render(request, 'results.html', context)
-
-    # default is to return to page?
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
+    end_time = time.time()
+    context = { 'pieces': pieces,
+                'keyform': KeySearchForm(),
+                'pager': pieces,
+                'keywords': keywords,
+                'search_time': '%2.4g' % (end_time - start_time),
+    }
+    return render(request, 'results.html', context)
 
 
 def adv_results(request):
