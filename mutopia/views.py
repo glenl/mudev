@@ -148,17 +148,15 @@ KEYWORD_TAG = 'kquery'
 def key_results(request):
     start_time = time.time()
 
+    # Uses a session cookies to track the query between pages.
     page = request.GET.get('page')
     if page is None:
         form = KeySearchForm(request.GET)
         if form.is_valid():
-            keywords = form.cleaned_data['keywords']
-            request.session[KEYWORD_TAG] = keywords
-            request.session.set_test_cookie()
-    else:
-        keywords = request.session.get(KEYWORD_TAG, '')
-        if request.session.test_cookie_worked():
-            request.session.delete_test_cookie()
+            request.session['keywords'] = form.cleaned_data['keywords']
+
+    # If this is blank, the user entered nothing or the form was not valid
+    keywords = request.session.get('keywords', '')
 
     try:
         q = fts_search(keywords)
@@ -172,6 +170,7 @@ def key_results(request):
     try:
         pieces = paginator.page(page)
     except PageNotAnInteger:
+        # typically the first page of results
         pieces = paginator.page(1)
     except EmptyPage:
         pieces = paginator.page(paginator.num_pages)
@@ -188,60 +187,86 @@ def key_results(request):
 
 def adv_results(request):
     """Process the form from an advanced search.
+    We expect to always get here from the advanced search page and
+    always on a get, either from the submit button on the form or the
+    paging navigation buttons.
+
+    - On first search submission, load the request session dictionary
+      from form values.
+    - On subsequent paging calls, if any, form values are pulled from
+      the session dictionary.
     """
-    if request.method == 'GET':
+    start_time = time.time()
+    page = request.GET.get('page')
+    if page is None:
+        # reset session data
+        for t in ['searchingfor','composer','style','instrument','lilyversion']:
+            request.session[t] = ''
+        request.session['time_delta'] = 0
+
         form = AdvSearchForm(request.GET)
         if form.is_valid():
-            start_time = time.time()
-
-            # Using fts with sqlite requires we process the keyword entry first
-            keywords = form.cleaned_data['searchingfor']
-            if len(keywords) > 0:
-                q = fts_search(keywords)
-            else:
-                q = Piece.objects.all()
-
-            # process the composer, instrument, and style choices if any
-            if form.cleaned_data['composer']:
-                q = q.filter(composer=form.cleaned_data['composer'])
-            if form.cleaned_data['style']:
-                q = q.filter(style=form.cleaned_data['style'])
-            if form.cleaned_data['instrument']:
-                q = q.filter(instruments__pk=form.cleaned_data['instrument'])
-
-            # If the user requested a time-based search, filter that here.
+            if len(form.cleaned_data['searchingfor']) > 0:
+                request.session['searchingfor'] = form.cleaned_data['searchingfor']
+            if len(form.cleaned_data['composer']) > 0:
+                request.session['composer'] = form.cleaned_data['composer']
+            if len(form.cleaned_data['style']) > 0:
+                request.session['style'] = form.cleaned_data['style']
+            if len(form.cleaned_data['instrument']):
+                request.session['instrument'] = form.cleaned_data['instrument']
+            if form.cleaned_data['lilyv']:
+                # still, the user has to fill something in here
+                if len(form.cleaned_data['lilyversion']) > 0:
+                    request.session['lilyversion'] = form.cleaned_data['lilyversion']
+            
             if form.cleaned_data['recent']:
-                td = datetime.timedelta(days=form.cleaned_data['timelength'])
+                # Store the computed time delta in days, not the value
+                # of recent. Note that 'timelength' and 'timeunit'
+                # values should exist per form constraints.
+                td = form.cleaned_data['timelength']
                 if form.cleaned_data['timeunit'] == SearchInterval.WEEK:
                     td = 7 * td
-                target_date = datetime.date.today() - td
-                q = q.filter(date_published__gte=target_date)
+                request.session['time_delta'] = td
+        else:
+            pass                # request session will be cleared
 
-            # Filter on LilyPond versions by searching for versions
-            # starting with the given value.
-            if form.cleaned_data['lilyv']:
-                q = q.filter(version__version__startswith=form.cleaned_data['lilyversion'])
+    # Now walk through the session variables to do the query and
+    # filtering.
+    if len(request.session['searchingfor']) > 0:
+        q = fts_search(request.session['searchingfor'])
+    else:
+        q = Piece.objects.all()
 
-            paginator = Paginator(q, 25)
-            page = request.GET.get('page')
-            try:
-                page = paginator.page(page)
-            except PageNotAnInteger:
-                page = paginator.page(1)
-            except EmptyPage:
-                page = paginator.page(paginator.num_pages)
+    # Filter on composer, instrument, style, and LilyPond version
+    if len(request.session['composer']) > 0:
+        q = q.filter(composer=request.session['composer'])
+    if len(request.session['style']) > 0:
+        q = q.filter(style=request.session['style'])
+    if len(request.session['instrument']) > 0:
+        q = q.filter(instruments__pk=request.session['instrument'])
+    if len(request.session['lilyversion']) > 0:
+        q = q.filter(version__version__startswith=request.session['lilyversion'])
 
+    # Finally, filter on delta time in days
+    if request.session['time_delta'] > 0:
+        td = datetime.timedelta(days=request.session['time_delta'])
+        target = datetime.date.today() - td
+        q = q.filter(date_published__gte=target)
 
-            # Force evaluation here so we get the correct search time.
-            end_time = time.time()
-            context = { 'page' : page,
-                        'keywords': keywords,
-                        'search_time': '%2.4g' % (end_time - start_time),
-            }
-            return render(request, 'results.html', context)
+    paginator = Paginator(q, 25)
+    try:
+        pager = paginator.page(page)
+    except PageNotAnInteger:
+        pager = paginator.page(1)
+    except EmptyPage:
+        pager = paginator.page(paginator.num_pages)
 
-    # default is to return to page?
-    return HttpResponseRedirect('/')
+    end_time = time.time()
+    context = { 'pager' : pager,
+                'pieces': pager,
+                'search_time': '%2.4g' % (end_time - start_time),
+    }
+    return render(request, 'results.html', context)
 
 
 def page_not_found(request):
