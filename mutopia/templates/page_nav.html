@@ -6,7 +6,7 @@
     {% else %}
     <li class="disabled"><a href="#">&laquo</a></li>
     {% endif %}
-    <li class="disabled"><span>Page {{ pager.number }} of {{ pager.paginator.num_pages }}</span></li>
+    <li><span>Page {{ pager.number }} of {{ pager.paginator.num_pages }}</span></li>
     {% if pager.has_next %}
     <li><a href="?page={{ pager.next_page_number }}">&raquo</a></li>
     {% else %}
