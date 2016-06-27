@@ -3,19 +3,7 @@ from django.db import connection
 from mutopia.models import Piece
 import re
 import pprint
-"""
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(kws)
-"""
 
-def get_keywords(p):
-    kws = [p.title, str(p.piece_id),
-           p.opus, p.composer.rawstr(),
-           p.raw_instrument, p.style.style,
-           p.version.version, p.lyricist,
-           p.source, p.date_composed, p.moreinfo,]
-    kstr = ', '.join(kws).rstrip(', ').replace(', ,', ',')
-    return kstr
 
 MATVIEW = """CREATE MATERIALIZED VIEW mu_search_table as
 SELECT p.piece_id,

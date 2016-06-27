@@ -82,6 +82,9 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+# This is used to support heroku.
+# To work around this in development use the local_settings.py module
+#  - use "python ./manage.py runserver --settings=mudev.local_settings"
 DATABASES['default'] = dj_database_url.config()
 
 # Password validation

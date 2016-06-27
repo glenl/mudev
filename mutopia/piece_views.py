@@ -8,6 +8,7 @@ from mutopia.utils import FTP_URL
 import os.path
 import requests
 
+
 def piece_info(request, piece_id):
     piece = get_object_or_404(Piece, pk=piece_id)
 

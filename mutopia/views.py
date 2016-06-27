@@ -31,7 +31,7 @@ def homepage(request):
     styles = sorted(styles, key=lambda x: x[1], reverse=True)
 
     context = {
-        'nav_home' : 'active',
+        'active' : 'home',
         'keyform': KeySearchForm(auto_id=False),
         'latest_list' : Piece.objects.order_by('-piece_id')[:10],
         'instruments' : instruments[:18],
@@ -45,7 +45,7 @@ def homepage(request):
 
 def adv_search(request):
     context = {
-        'nav_search': 'active',
+        'active' : 'search',
         'composers': composer_choices(),
         'instruments': instrument_choices(),
         'styles': style_choices(),
@@ -56,8 +56,8 @@ def adv_search(request):
 
 def legal(request):
     context = {
+        'active' : 'legal',
         'keyform': KeySearchForm(auto_id=False),
-        'nav_legal': 'active'
     }
     return render(request, 'legal.html', context)
 
@@ -65,7 +65,7 @@ def legal(request):
 def contribute(request):
     context = {
         'keyform': KeySearchForm(auto_id=False),
-        'nav_contribute': 'active',
+        'active' : 'contribute',
         'composers': Composer.objects.all(),
         'licenses': License.objects.filter(active=True).order_by('name'),
         'styles': Style.objects.filter(in_mutopia=True)
@@ -88,7 +88,7 @@ def browse(request):
     insts = round(inst.count()/3)
     context = {
         'keyform': KeySearchForm(auto_id=False),
-        'nav_browse': 'active',
+        'active' : 'browse',
         'collections': (c[:csplit], c[csplit:],),
         'composers': (comp[:comps], comp[comps:(comps+comps)], comp[(comps+comps):],),
         'styles': (s[:ss], s[ss:(ss+ss)], s[(ss+ss):],),
@@ -99,8 +99,8 @@ def browse(request):
 
 def contact(request):
     context = {
+        'active' : 'contact',
         'keyform': KeySearchForm(auto_id=False),
-        'nav_contact': 'active'
     }
     return render(request, 'contact.html', context)
 
@@ -117,6 +117,9 @@ def title_search(keywords):
     return q
 
 
+# TODO: Using variables here is not a complete solution
+# TODO: because fts_search assumes PostGres fts query logic
+# TODO: and SQLITE does not support fts query logic.
 _SQLITE_FTSQ = """SELECT piece_id FROM muPieceKeys \
  WHERE muPieceKeys MATCH '%{0}'"""
 
@@ -131,7 +134,7 @@ def fts_search(keywords):
     of Pieces using a filter.
     """
     cursor = connection.cursor()
-    if re.search('[\(&\)\|\-!]', keywords) is not None:
+    if re.search('[\(&\)\|\-!]', keywords):
         # the user is using fts query logic so use the string as is
         cursor.execute(_PG_FTSQ.format(keywords))
     else:
@@ -141,6 +144,7 @@ def fts_search(keywords):
 
     # Get the results as a simple list of ids for the filter
     results = [ row[0] for row in cursor.fetchall() ]
+
     return Piece.objects.filter(pk__in=results)
 
 
@@ -161,8 +165,10 @@ def key_results(request):
     try:
         q = fts_search(keywords)
     except ProgrammingError:
-        context = { 'message': 'Unable to parse keywords search terms',
-                    'keyform': KeySearchForm(),
+        context = {
+            'active' : 'None',
+            'message': 'Unable to parse keywords search terms',
+            'keyform': KeySearchForm(),
         }
         return render(request, 'results.html', context)
 
@@ -176,11 +182,13 @@ def key_results(request):
         pieces = paginator.page(paginator.num_pages)
 
     end_time = time.time()
-    context = { 'pieces': pieces,
-                'keyform': KeySearchForm(),
-                'pager': pieces,
-                'keywords': keywords,
-                'search_time': '%2.4g' % (end_time - start_time),
+    context = {
+        'active' : 'None',
+        'pieces': pieces,
+        'keyform': KeySearchForm(),
+        'pager': pieces,
+        'keywords': keywords,
+        'search_time': '%2.4g' % (end_time - start_time),
     }
     return render(request, 'results.html', context)
 
@@ -262,9 +270,11 @@ def adv_results(request):
         pager = paginator.page(paginator.num_pages)
 
     end_time = time.time()
-    context = { 'pager' : pager,
-                'pieces': pager,
-                'search_time': '%2.4g' % (end_time - start_time),
+    context = {
+        'active' : 'None',
+        'pager' : pager,
+        'pieces': pager,
+        'search_time': '%2.4g' % (end_time - start_time),
     }
     return render(request, 'results.html', context)
 

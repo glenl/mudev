@@ -43,12 +43,10 @@ class Contributor(models.Model):
     @classmethod
     def find_or_create(self, m_maintainer, m_email, m_url):
         try:
-            c = Contributor.objects.get(name = m_maintainer)
+            c = Contributor.objects.get(name=m_maintainer)
             return c
         except Contributor.DoesNotExist:
-            c = Contributor(name = m_maintainer,
-                            email = m_email,
-                            url = m_url)
+            c = Contributor(name=m_maintainer, email=m_email, url=m_url)
             c.save()
             return c
 
@@ -79,10 +77,10 @@ class LPVersion(models.Model):
     @classmethod
     def find_or_create(self, lpversion):
         try:
-            v = LPVersion.objects.get(version = lpversion)
+            v = LPVersion.objects.get(version=lpversion)
             return v
         except LPVersion.DoesNotExist:
-            v = LPVersion(version = lpversion)
+            v = LPVersion(version=lpversion)
             bits = lpversion.split('.',2)
             v.major = bits[0]
             if len(bits) > 1:

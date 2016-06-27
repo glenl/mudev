@@ -32,18 +32,18 @@ class Singleton:
     to use `__call__` will result in a `TypeError` being raised.
 
     Limitations: The decorated class cannot be inherited from.
-
     """
 
     def __init__(self, decorated):
         self._decorated = decorated
 
     def Instance(self):
-        """
-        Returns the singleton instance. Upon its first call, it creates a
-        new instance of the decorated class and calls its `__init__` method.
-        On all subsequent calls, the already created instance is returned.
+        """Returns the singleton instance.
 
+        Returns:
+            Upon its first call, it creates a new instance of the
+            decorated class and calls its `__init__` method. On all
+            subsequent calls, the already created instance is returned.
         """
         try:
             return self._instance
@@ -60,10 +60,19 @@ class Singleton:
 
 _FOOT_PAT = re.compile("Mutopia-([0-9/]+)-([0-9]+)$")
 def id_from_footer(footer):
-    """Given the value of a footer entry in a header, return the
-    Mutopia id number.
+    """Parse a Mutopia footer string.
+
+    Args:
+        footer: the mutopia footer string from the header
+
+    Returns:
+        A tuple containing the pertinent footer information or None
+        if the regular expression fails. For example,
+
+        Mutopia-2016/20/12-33 ==> ("2016/20/12", "33")
+        Mutopia-2016/20/12-AB ==> None
     """
-    if footer is not None:
+    if footer:
         fmat = _FOOT_PAT.search(footer)
         if fmat:
             return (fmat.group(1),fmat.group(2))
