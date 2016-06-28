@@ -1,4 +1,12 @@
-# -*- coding: utf-8 -*-
+"""
+.. module:: utils
+   :platform: Linux
+   :synopsis: Miscellaneous utility functions
+
+.. moduleauthor:: Glen Larsen <glenl.glx@gmail.com>
+
+"""
+
 import os
 import re
 

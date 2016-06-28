@@ -1,6 +1,6 @@
 from django.test import TestCase
 from mutopia.models import Instrument, RawInstrumentMap
-from mutopia.utils import instrument_match
+from mutopia.dbutils import instrument_match
 
 class RawInstrumentTestCase(TestCase):
     def setUp(self):

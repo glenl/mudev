@@ -10,6 +10,7 @@ from mutopia.models import Composer, Style, Piece, Instrument, Contributor
 from mutopia.models import LPVersion, RawInstrumentMap, UpdateMarker
 from mutopia.models import AssetMap, License
 from mutopia.utils import GITHUB_REPOS, FTP_URL, id_from_footer
+from mutopia.dbutils import instrument_match
 from subprocess import check_output
 from rdflib import Graph, URIRef, Namespace, URIRef
 from rdflib.term import Literal
@@ -18,23 +19,6 @@ from requests.auth import HTTPBasicAuth
 
 MP = Namespace('http://www.mutopiaproject.org/piece-data/0.1/')
 git_headers = {'Accept' : 'application/vnd.github.v3+json'}
-
-def instrument_match(w):
-    """try a match directly to an instrument"""
-    try:
-        t = Instrument.objects.get(pk=w.capitalize())
-        return t
-    except Instrument.DoesNotExist:
-        pass
-
-    # else lookup in the translation map
-    try:
-        r = RawInstrumentMap.objects.get(raw_instrument__iexact=w)
-        return r.instrument
-    except RawInstrumentMap.DoesNotExist:
-        pass
-
-    return None
 
 
 def commits_since(auth, since_date):
@@ -100,6 +84,7 @@ class Command(BaseCommand):
         rmap = AssetMap.objects.all().filter(piece__isnull=True)
         for r in rmap:
             path = '/'.join([FTP_URL, r.folder, r.name+'.rdf',])
+            print(path)
             graph = Graph().parse(URIRef(path))
             # Since we know the composer is required (which we have
             # from the spec) we can get the subject.
