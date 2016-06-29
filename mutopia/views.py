@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from django.shortcuts import HttpResponse, render, render_to_response
-from django.template import RequestContext
+from django.shortcuts import HttpResponse, render
+from django.template import loader
 from django.http import HttpResponseRedirect
 from django.db import connection, ProgrammingError
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -226,7 +226,7 @@ def adv_results(request):
                 # still, the user has to fill something in here
                 if len(form.cleaned_data['lilyversion']) > 0:
                     request.session['lilyversion'] = form.cleaned_data['lilyversion']
-            
+
             if form.cleaned_data['recent']:
                 # Store the computed time delta in days, not the value
                 # of recent. Note that 'timelength' and 'timeunit'
@@ -279,8 +279,8 @@ def adv_results(request):
     return render(request, 'results.html', context)
 
 
-def page_not_found(request):
-    response = render_to_response('404.html',
-                                  context_instance=RequestContext(request))
+def handler404(request, template_name='404.html'):
+    t = loader.get_template(template_name)
+    response = HttpResponse(t.render({}));
     response.status_code = 404
     return response
