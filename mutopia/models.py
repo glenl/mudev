@@ -41,12 +41,12 @@ class Contributor(models.Model):
         return self.email
 
     @classmethod
-    def find_or_create(self, m_maintainer, m_email, m_url):
+    def find_or_create(self, m_maintainer, email='', url=''):
         try:
             c = Contributor.objects.get(name=m_maintainer)
             return c
         except Contributor.DoesNotExist:
-            c = Contributor(name=m_maintainer, email=m_email, url=m_url)
+            c = Contributor(name=m_maintainer, email=email, url=url)
             c.save()
             return c
 
@@ -76,6 +76,11 @@ class LPVersion(models.Model):
 
     @classmethod
     def find_or_create(self, lpversion):
+        """Create (or get) the specified LilyPond version.
+
+        :param lpversion: LilyPond version string
+        :type lpversion: str.
+        """
         try:
             v = LPVersion.objects.get(version=lpversion)
             return v
