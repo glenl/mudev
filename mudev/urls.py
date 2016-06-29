@@ -46,4 +46,4 @@ urlpatterns = [
     url(r'latest/atom/$', AtomLatestFeed(), name='latest-atom'),
 ]
 
-handler404 = 'mutopia.views.page_not_found'
+handler404 = 'mutopia.views.handler404'
