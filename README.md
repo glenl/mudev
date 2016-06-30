@@ -20,9 +20,10 @@ Building a site with [Django](https://www.djangoproject.com/) is a
 matter of defining an object relationship model (``ORM``) and
 developing the web-site using view code and html templates.
 
-In Django-speak:
+In Django-speak,
 
     * The ``Project`` is mudev
+
     * The ``App`` is mutopia
 
 You will find top-level project code under ``mudev`` but the meat of
@@ -32,7 +33,7 @@ the [Django documentation](https://docs.djangoproject.com/) handy.
 
 The project documentation is done in Sphinx under the ``docs`` folder.
 
-## Building
+## Development setup
 
 This project uses typical Python (python 3!) tools. Once you clone the
 repository you will need to create the appropriate virtual
