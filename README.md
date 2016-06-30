@@ -22,9 +22,9 @@ developing the web-site using view code and html templates.
 
 In Django-speak,
 
-    * The ``Project`` is mudev
+  * The ``Project`` is mudev
 
-    * The ``App`` is mutopia
+  * The ``App`` is mutopia
 
 You will find top-level project code under ``mudev`` but the meat of
 this project is under ``mutopia``. If you are not familiar with
