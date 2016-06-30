@@ -68,17 +68,17 @@ class Singleton:
 
 _FOOT_PAT = re.compile("Mutopia-([0-9/]+)-([0-9]+)$")
 def id_from_footer(footer):
-    """Parse a Mutopia footer string.
+    """Parse a Mutopia footer string, typically from an RDF file, and
+    return a tuple containing the publication date and piece-id.
 
-    Args:
-        footer: the mutopia footer string from the header
-
-    Returns:
-        A tuple containing the pertinent footer information or None
-        if the regular expression fails. For example,
+    For example::
 
         Mutopia-2016/20/12-33 ==> ("2016/20/12", "33")
         Mutopia-2016/20/12-AB ==> None
+
+    :param str footer: The mutopia footer string, expected to be in the appropriate format.
+    :return: A tuple or ``None`` if the footer can't be parsed.
+
     """
     if footer:
         fmat = _FOOT_PAT.search(footer)

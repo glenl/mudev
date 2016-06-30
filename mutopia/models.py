@@ -1,10 +1,24 @@
+"""
+This module defines the classes for the Django object relationship
+model. Each class represents a table in the underlying database, the
+attributes of a class will represent its columns. Methods on each
+class may be used in templates when rendering web pages.
+
+"""
 # -*- coding: utf-8 -*-
 from django.db import models
 import os.path
 from mutopia.utils import FTP_URL
 
 class Composer(models.Model):
+    """A Composer, an author of a piece of music. The methods defined
+    here are for use in templates for the web-pages.
+
+    """
+
+    #:The name of the composer
     composer = models.CharField(max_length=32, primary_key=True)
+    #:A more verbose description
     description = models.CharField(max_length=48)
 
     def __str__(self):
@@ -28,20 +42,38 @@ class Composer(models.Model):
 
 
 class Contributor(models.Model):
+    """A ``Contributor`` (aka ``Maintainer``) is an entity who
+    contributes to the catalog. A user association is not
+    maintained by Mutopia so this is not entirely accurate, but it
+    allows some normalization for database purposes.
+
+    """
+
+    #:The name of the contributor.
     name = models.CharField(max_length=128, unique=True)
+    #:Email address (optional).
     email = models.EmailField(blank=True)
+    #:Web or URL entered by the user (optional).
     url = models.URLField(blank=True)
 
     def __str__(self):
         return self.name
 
     def reformat_email(self):
+        """Munge the email address for display purposes. This is only
+        moderately useful against bots...
+        """
         if len(self.email) > 0:
             return self.email.replace('@', ' (at) ')
         return self.email
 
     @classmethod
     def find_or_create(self, m_maintainer, email='', url=''):
+        """Factory method for creating a ``Contributor`` instance.
+        :param str m_maintainer: Name of the contributor.
+        :param str email: Email address (optional).
+        :param str url: Web or relevant internet reference (optional).
+        """
         try:
             c = Contributor.objects.get(name=m_maintainer)
             return c
@@ -56,8 +88,16 @@ class Contributor(models.Model):
 
 
 class Style(models.Model):
+    """A ``Style`` is a genre of music that can be associated with a
+    piece.
+
+    """
+
+    #:The name of the style.
     style = models.CharField(max_length=32, primary_key=True)
+    #:A slug is a naming mechanism for styles so that URLs are consistent.
     slug = models.SlugField(max_length=32)
+    #:Boolean flag to specify whether this style was in the original MutopiaProject.
     in_mutopia = models.BooleanField(default=False)
 
     def __str__(self):
@@ -69,17 +109,26 @@ class Style(models.Model):
 
 
 class LPVersion(models.Model):
+    """Defines the LilyPond version for a piece of music. These
+    versions are defined as a typical ``major``.``minor``.``edit``
+    string which is broken apart at construction for easier
+    manipulation during catalog analysis.
+    """
+
+    #:The full string-ified version specification.
     version = models.CharField(max_length=24, unique=True)
+    #:
     major = models.IntegerField(blank=True, null=True)
+    #:
     minor = models.IntegerField(blank=True, null=True)
+    #:
     edit = models.CharField(max_length=8, blank=True)
 
     @classmethod
     def find_or_create(self, lpversion):
         """Create (or get) the specified LilyPond version.
 
-        :param lpversion: LilyPond version string
-        :type lpversion: str.
+        :param str lpversion: LilyPond version string
         """
         try:
             v = LPVersion.objects.get(version=lpversion)
@@ -113,7 +162,17 @@ class UpdateMarker(models.Model):
 
 
 class Instrument(models.Model):
+    """An ``Instrument`` defines a single instrument. A boolean flag
+    is available to declare whether this instrument was in the
+    original Mutopia Instrument list.
+
+    """
+
+    #:The formal unique name of the instrument
     instrument = models.CharField(max_length=32, primary_key=True)
+    #:A flag to specify whether this instrument is in the original
+    #:collection of Mutopia instruments. This allows the addition of
+    #:*unofficial* instrument names.
     in_mutopia = models.BooleanField(default=False)
 
     def __str__(self):
@@ -125,10 +184,23 @@ class Instrument(models.Model):
 
 
 class License(models.Model):
+    """A ``License`` is a description of the copyright for music in
+    the MutopiaProject catalogue. As new licenses emerge, and older
+    ones are deprecated, a flag can be set to prevent them from being
+    displayed on the licensing page. Inactive licenses may remain for
+    as long as necessary.
+
+    """
+
+    #:The name of the license.
     name = models.CharField(max_length=64)
+    #:The URL that can be used to lookup extended license information.
     url = models.URLField()
-#    short_name = models.CharField(max_length=8)
+    #:A graphic badge, just the name without extension.
     badge = models.CharField(max_length=32, blank=True)
+    #:A flag to declare whether this license is active or not.
+    #:Inactive would mean that we are not currently promoting its use
+    #:but it is possible that the license is still in use within Mutopia.
     active = models.BooleanField(default=False)
 
     def __str__(self):
@@ -188,11 +260,20 @@ class Piece(models.Model):
 
 
 class AssetMap(models.Model):
-    """The Asset map holds the physical assets of the piece.
+    """An ``AssetMap`` forms an association of a single
+    :class:`mutopia.models.Piece` to its physical data storage assets. It has
+    particular benefit when updating or adding pieces.
+
     """
+    #:The topmost file location for the piece
     folder = models.CharField(max_length=128)
+    #:Within a folder, piece assets (pdf files, LilyPond sources,
+    #:etc.) can be identified with a single name.
     name = models.CharField(max_length=64, blank=True)
+    #:True if this piece uses several LilyPond files.
     has_lys = models.BooleanField(default=False)
+    #:The reference to the piece. When new pieces are created this is
+    #:left null and filled in when the RDF file is processed.
     piece = models.OneToOneField(Piece,
                                  models.SET_NULL,
                                  blank=True,
@@ -263,14 +344,22 @@ class AssetMap(models.Model):
         ordering = ['folder']
 
 
-# We want users to specify instruments with our existing tags but that
-# does not always happen and there are many legacy cases. This model
-# defines a table to map a user's instrument name to our internal
-# instrument. This is also a convenient way to implement foreign
-# language translations, plurals, local instrument nicknames names
-# (e.g., uke->ukulele), etc..
 class RawInstrumentMap(models.Model):
+    """We want users to specify known instruments in the
+    :class:`mutopia.models.Instrument` table but this is not easily regulated with
+    user input. The ``RawInstrumentMap`` maps these
+    un-regulated names to rows in the :class:`mutopia.models.Instrument` table. This
+    table can be used for nicknames (*uke* ==> *ukulele*) as well as
+    common misspellings, plurals, or foreign names.
+
+    Only used during RDF processing, not live web code.
+
+    """
+    #:An instrument name that may be a nickname (*uke*) or a common
+    #:non-English name (*guitarre*) that can be mapped to a name in
+    #:the :class:`mutopia.models.Instrument` table.
     raw_instrument = models.TextField(primary_key=True)
+    #:Reference to the :class:`mutopia.models.Instrument` table
     instrument = models.ForeignKey(Instrument, models.CASCADE)
 
     def __str__(self):
@@ -281,11 +370,18 @@ class RawInstrumentMap(models.Model):
 
 
 class Collection(models.Model):
+    """This class defines a collection of associated pieces. This can
+    be an entire opus or a other relationship. This has a one-to-many
+    relationship with :class:`mutopia.models.CollectionPiece`.
+
+    """
+    #:A unique description string for this collection.
     tag = models.CharField(max_length=32, primary_key=True)
+    #:The title of the collection.
     title = models.CharField(max_length=128)
 
     def user_infofile(self):
-        """Return a filename for the optional collection data"""
+        """Return a filename for the optional collection data file."""
         return os.path.join(['collections', self.tag, 'collection-info.dat'])
 
     def __str__(self):
@@ -295,7 +391,14 @@ class Collection(models.Model):
         db_table = 'muCollection'
 
 class CollectionPiece(models.Model):
+    """A single piece entity within a collection. This is simple
+    relational object that simply forms a connection between a
+    :class:`mutopia.models.Piece` and a :class:`mutopia.models.Collection`.
+    """
+
+    #:Reference to the collection
     collection = models.ForeignKey(Collection)
+    #:Reference to the piece
     piece = models.ForeignKey(Piece)
 
     def __str__(self):

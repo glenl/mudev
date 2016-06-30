@@ -9,11 +9,19 @@
 from mutopia.models import Instrument, RawInstrumentMap
 
 def instrument_match(instr):
-    """Try to match directly to an instrument.
+    """Given an instrument name of dubious quality, attempt to
+    normalize the name to a pre-defined set of instrument names. The
+    goal is to make searches go more smoothly in a site package. We
+    want users to be able to find music for a ukulele whether they
+    search using the string *uke* or *ukulele*.
 
-    :param instr: The candidate instrument name
-    :type instr: str.
-    :returns: string -- the matched (normalized) instrument
+    If the given instrument matches one in the :class:`mutopia.Instrument`
+    table, just return that name. Otherwise, look for match in
+    :class:`mutopia.RawInstrumentMap`.
+
+    :param str instr: The candidate instrument name
+    :return: The matched (normalized) instrument
+    :rtype: str
 
     """
     try:

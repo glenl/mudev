@@ -22,6 +22,5 @@ class CollectionAdmin(admin.ModelAdmin):
 class StyleAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("style",)}
 
-
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(Style, StyleAdmin)
