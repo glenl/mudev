@@ -1,3 +1,8 @@
+"""This module contains the primary presentation views of the mutopia
+   application.
+
+"""
+
 # -*- coding: utf-8 -*-
 from django.shortcuts import HttpResponse, render
 from django.template import loader
@@ -13,7 +18,23 @@ import time
 import datetime
 
 def homepage(request):
-    """The home page for the site"""
+    """
+    The home page for the site.
+
+
+    Because the database doesn't associate the count of pieces with
+    the instruments directly, we build a list of tuples that look
+    like::
+
+      (instrument, count-of-pieces-that-reference-this-instrument)
+
+    Then sort on the list by the counts. By doing an inverse search
+    we can display the most *popular* instrument first.
+
+    A similar popularity sort is applied to composers and styles
+
+    """
+
     instruments = []
     for i in Instrument.objects.filter(in_mutopia=True):
         instruments.append((i.instrument,
@@ -44,6 +65,11 @@ def homepage(request):
 
 
 def adv_search(request):
+    """
+    The advanced search presents a form with many search options.
+
+    """
+
     context = {
         'active' : 'search',
         'composers': composer_choices(),
@@ -55,6 +81,9 @@ def adv_search(request):
 
 
 def legal(request):
+    """
+    The legal/license page is mostly HTML with a search form.
+    """
     context = {
         'active' : 'legal',
         'keyform': KeySearchForm(auto_id=False),
@@ -63,6 +92,12 @@ def legal(request):
 
 
 def contribute(request):
+    """
+    The contribute page display tables to help potential contributors
+    build a correct header in their submissions.
+
+    """
+
     context = {
         'keyform': KeySearchForm(auto_id=False),
         'active' : 'contribute',
@@ -74,6 +109,20 @@ def contribute(request):
 
 
 def browse(request):
+    """
+    The browse page is a page of links to the following items,
+
+      * Collections
+      * Composers
+      * Styles
+      * Instruments
+
+    """
+    # TODO: this is a hacky way to split the columns. It works but
+    # requires lots of messing about if the lists are restructured. It
+    # also requires some fore-knowledge on the part of the template
+    # since the presentation width is specified there.
+
     # collection
     c = Collection.objects.all()
     csplit = round(c.count()/2)
@@ -98,6 +147,9 @@ def browse(request):
 
 
 def contact(request):
+    """
+    The contact page is HTML with a search form.
+    """
     context = {
         'active' : 'contact',
         'keyform': KeySearchForm(auto_id=False),
@@ -105,34 +157,31 @@ def contact(request):
     return render(request, 'contact.html', context)
 
 
-def title_search(keywords):
-    """Given keywords, search for a containment match in titles
-    """
-    p = re.compile(r'\W+')
-    kws = p.split(keywords)
-    q = Piece.objects.filter(title__icontains=kws[0])
-    kws = kws[1:]
-    for kw in kws:
-        q = q.filter(title__icontains=kw)
-    return q
-
-
-# TODO: Using variables here is not a complete solution
-# TODO: because fts_search assumes PostGres fts query logic
-# TODO: and SQLITE does not support fts query logic.
-_SQLITE_FTSQ = """SELECT piece_id FROM muPieceKeys \
- WHERE muPieceKeys MATCH '%{0}'"""
-
+# FTS is not supported directly in Django so we are going to execute a
+# manual query. This is a format string that is designed to be filled
+# in by a keyword string to form the query.
 _PG_FTSQ = """SELECT piece_id FROM mu_search_table \
 WHERE document @@ to_tsquery('english', '{0}')"""
 
 def fts_search(keywords):
-    """Given keywords, search using FTS.
-    Because FTS is not a supported feature of django and SQLite, it is
-    faked here by using a manual query that returns keys for the
-    muPiece table (model.Piece). This gets translated into a QuerySet
-    of Pieces using a filter.
     """
+    Given keyword string, search using FTS. Because FTS is not a supported
+    feature of django and SQLite, it is faked here by using a manual
+    query that returns keys for the muPiece table (model.Piece). This
+    gets translated into a QuerySet of Pieces using a filter.
+
+      * The keyword string may contain directives to the postgres FTS
+        engine in which case the keyword string is executed directly as-is.
+      * Otherwise, the keywords are broken apart and AND'ed together.
+
+
+    :param str keywords: Input from the user
+    :return: Zero or more Pieces.
+    :rtype: A Piece query set.
+
+
+    """
+
     cursor = connection.cursor()
     if re.search('[\(&\)\|\-!]', keywords):
         # the user is using fts query logic so use the string as is
@@ -148,18 +197,25 @@ def fts_search(keywords):
     return Piece.objects.filter(pk__in=results)
 
 
-KEYWORD_TAG = 'kquery'
 def key_results(request):
+    """
+    This responds to keyword search request (typically from the entry
+    box on the jumbotron but could be anywhere. If there are more than
+    one page, this routine may be re-entered to process other pages.
+
+    """
+
     start_time = time.time()
 
-    # Uses a session cookies to track the query between pages.
     page = request.GET.get('page')
     if page is None:
         form = KeySearchForm(request.GET)
         if form.is_valid():
+            # Uses session cookies to track the query between pages.
             request.session['keywords'] = form.cleaned_data['keywords']
 
-    # If this is blank, the user entered nothing or the form was not valid
+    # If ther are no keywords here, the user entered nothing or the
+    # form was not valid.
     keywords = request.session.get('keywords', '')
 
     try:
@@ -194,15 +250,18 @@ def key_results(request):
 
 
 def adv_results(request):
-    """Process the form from an advanced search.
+    """
+    Process the form from an advanced search.
     We expect to always get here from the advanced search page and
     always on a get, either from the submit button on the form or the
     paging navigation buttons.
 
-    - On first search submission, load the request session dictionary
-      from form values.
-    - On subsequent paging calls, if any, form values are pulled from
-      the session dictionary.
+      * On first search submission, load the request session dictionary
+        from form values.
+
+      * On subsequent paging calls, if any, form values are pulled from
+        the session dictionary.
+
     """
     start_time = time.time()
     page = request.GET.get('page')
@@ -280,6 +339,9 @@ def adv_results(request):
 
 
 def handler404(request, template_name='404.html'):
+    """
+    Responds to pages that cannot be located on the server.
+    """
     t = loader.get_template(template_name)
     response = HttpResponse(t.render({}));
     response.status_code = 404

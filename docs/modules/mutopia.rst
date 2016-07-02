@@ -1,5 +1,6 @@
 mutopia package
 ===============
+This is a basic `Django <https://docs.djangoproject.com/en/1.9/>`_ layout.
 
 mutopia.models module
 ---------------------

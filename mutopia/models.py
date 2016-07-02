@@ -1,8 +1,8 @@
-"""
-This module defines the classes for the Django object relationship
-model. Each class represents a table in the underlying database, the
-attributes of a class will represent its columns. Methods on each
-class may be used in templates when rendering web pages.
+"""The ``models`` module defines the classes for the Django object
+   relationship model. Each class represents a table in the underlying
+   database, the attributes of a class will represent its columns.
+   Methods on each class may be used in templates when rendering web
+   pages.
 
 """
 # -*- coding: utf-8 -*-
@@ -11,14 +11,24 @@ import os.path
 from mutopia.utils import FTP_URL
 
 class Composer(models.Model):
-    """A Composer, an author of a piece of music. The methods defined
+    """
+    A Composer, an author of a piece of music. The methods defined
     here are for use in templates for the web-pages.
 
     """
 
-    #:The name of the composer
+    #:The name of the composer. This is specially formatted unique
+    #:text that is used as a primary key. The field is built by a
+    #:concatenation of the capitalized last name and initials of the
+    #:composers given name. For example,
+    #:
+    #:  * MozartWA
+    #:  * BachJS
+    #:
     composer = models.CharField(max_length=32, primary_key=True)
-    #:A more verbose description
+    #:A more verbose description, with parenthetic lifespan. The
+    #:lifespan data can be omitted in some cases, notably
+    #:``Traditional`` and ``Anonymous``.
     description = models.CharField(max_length=48)
 
     def __str__(self):
@@ -42,7 +52,8 @@ class Composer(models.Model):
 
 
 class Contributor(models.Model):
-    """A ``Contributor`` (aka ``Maintainer``) is an entity who
+    """
+    A ``Contributor`` (aka ``Maintainer``) is an entity who
     contributes to the catalog. A user association is not
     maintained by Mutopia so this is not entirely accurate, but it
     allows some normalization for database purposes.
@@ -88,7 +99,8 @@ class Contributor(models.Model):
 
 
 class Style(models.Model):
-    """A ``Style`` is a genre of music that can be associated with a
+    """
+    A ``Style`` is a genre of music that can be associated with a
     piece.
 
     """
@@ -109,19 +121,20 @@ class Style(models.Model):
 
 
 class LPVersion(models.Model):
-    """Defines the LilyPond version for a piece of music. These
-    versions are defined as a typical ``major``.``minor``.``edit``
+    """
+    Defines the LilyPond version for a piece of music. These
+    versions are defined as a typical ``major.minor.edit``
     string which is broken apart at construction for easier
     manipulation during catalog analysis.
     """
 
     #:The full string-ified version specification.
     version = models.CharField(max_length=24, unique=True)
-    #:
+    #:Major part of version as integer.
     major = models.IntegerField(blank=True, null=True)
-    #:
+    #:Minor part of version as integer.
     minor = models.IntegerField(blank=True, null=True)
-    #:
+    #:Free-form last part, may contain ASCII characters.
     edit = models.CharField(max_length=8, blank=True)
 
     @classmethod
@@ -152,6 +165,12 @@ class LPVersion(models.Model):
 
 
 class UpdateMarker(models.Model):
+    """
+    Used by the update routines, an ``UpdateMarker`` allows the
+    last update check to be persistent.
+
+    """
+    #:Date of update.
     updated_on = models.DateTimeField()
 
     def __str__(self):
@@ -162,7 +181,8 @@ class UpdateMarker(models.Model):
 
 
 class Instrument(models.Model):
-    """An ``Instrument`` defines a single instrument. A boolean flag
+    """
+    An ``Instrument`` defines a single instrument. A boolean flag
     is available to declare whether this instrument was in the
     original Mutopia Instrument list.
 
@@ -184,7 +204,8 @@ class Instrument(models.Model):
 
 
 class License(models.Model):
-    """A ``License`` is a description of the copyright for music in
+    """
+    A ``License`` is a description of the copyright for music in
     the MutopiaProject catalogue. As new licenses emerge, and older
     ones are deprecated, a flag can be set to prevent them from being
     displayed on the licensing page. Inactive licenses may remain for
@@ -222,34 +243,69 @@ class Tag(models.Model):
 
 
 class Piece(models.Model):
+    """
+    A ``Piece`` defines a complete MutopiaProject archive entity. Most
+    of the attributes and relationships of this piece are retrieved by
+    parsing the header text of a submitted LilyPond file.
+
+    """
+
+    #:Define the unique Mutopia ID for this piece.
     piece_id = models.IntegerField(primary_key=True)
+    #:The title of the piece
     title = models.CharField(max_length=128)
+    #:The composer is a 1:1 relationship to a specific composer.
     composer = models.ForeignKey(Composer, models.CASCADE)
+    #:The style is a 1:1 relationship to a specific style.
     style = models.ForeignKey(Style,
                               models.SET_NULL,
                               blank=True,
                               null=True)
+    #:The instrument field in the header can be somewhat free-form so
+    #:this is remembered for later parsing and building the
+    #:`instruments` relationship.
     raw_instrument = models.TextField(blank=True)
+    #:There can only be a single license so this forms a 1:1
+    #:relationship to our known licenses.
     license = models.ForeignKey(License,
                                 models.SET_NULL,
                                 blank=True,
                                 null=True)
+    #:This field contains the contributor who transcribed the piece.
     maintainer = models.ForeignKey(Contributor,
                                    models.SET_NULL,
                                    blank=True,
                                    null=True)
+    #:The LilyPond version that this piece was transcribed with. A 1:1
+    #:relationship is formed here to better track pieces done with
+    #:specific versions.
     version = models.ForeignKey(LPVersion,
                                 models.SET_NULL,
                                 blank=True,
                                 null=True)
+    #:The opus, if any.
     opus = models.CharField(max_length=64, blank=True, default='')
+    #:The poet or author of any text associated with the piece.
     lyricist = models.CharField(max_length=128, blank=True, default='')
+    #:The composition date if known. It is sometimes approximate and
+    #:may contain non-ISO characters.
     date_composed = models.CharField(max_length=32, blank=True)
+    #:The publish date is derived from the footer portion of the
+    #:header. The full ID can be derived from the ``piece_id`` and
+    #:this field.
     date_published = models.DateField()
+    #:The source, or publisher, of the piece used to make the
+    #:transcription. A text field is used since the name can be quite
+    #:long.
     source = models.TextField(blank=True)
+    #:The free-form text that a user can apply to a piece.
     moreinfo = models.TextField(blank=True, default='')
 
+    #:Adding instruments as a relationship instead of an attribute
+    #:allows a more controlled and accurate search.
     instruments = models.ManyToManyField(Instrument)
+    #:Tags are free-form attributes that can be applied to a piece.
+    #:Not currently used.
     tags = models.ManyToManyField(Tag)
 
     def __str__(self):
@@ -283,57 +339,70 @@ class AssetMap(models.Model):
         return '/'.join([self.folder, self.name,])
 
     def get_composer(self):
+        """Return the composer part of the folder."""
         return self.folder.split('/',1)[0]
 
     def get_midi(self):
+        """Return a full pathname for midi files."""
         return '/'.join([FTP_URL, self.folder, self.midi_spec(),])
 
     def get_ly(self):
+        """Return a full pathname for LilyPond files."""
         return '/'.join([FTP_URL, self.folder, self.ly_spec(),])
 
     def get_ps_a4(self):
+        """Return a full pathname for A4 PostScript files."""
         return '/'.join([FTP_URL, self.folder, self.ps_a4_spec(),])
 
     def get_ps_let(self):
+        """Return a full pathname for Letter PostScript files."""
         return '/'.join([FTP_URL, self.folder, self.ps_let_spec(),])
 
     def get_pdf_a4(self):
+        """Return a full pathname for A4 PDF files."""
         return '/'.join([FTP_URL, self.folder, self.pdf_a4_spec(),])
 
     def get_pdf_let(self):
+        """Return a full pathname for Letter PDF files."""
         return '/'.join([FTP_URL, self.folder, self.pdf_let_spec(),])
 
     def midi_spec(self):
+        """Return a filename for the midi file(s)."""
         if self.has_lys:
             return '{0}-mids.zip'.format(self.name)
         else:
             return '{0}.mid'.format(self.name)
 
     def ly_spec(self):
+        """Return a filename for the LilyPond file(s)."""
         if self.has_lys:
             return '{0}-lys.zip'.format(self.name)
         else:
             return '{0}.ly'.format(self.name)
 
     def ps_a4_spec(self):
+        """Return a filename for the A4 PostScript file(s)."""
         if self.has_lys:
             return '{0}-a4-pss.zip'.format(self.name)
         else:
             return '{0}-a4.ps.gz'.format(self.name)
 
     def ps_let_spec(self):
+        """Return a filename for the Letter PostScript file(s)."""
         if self.has_lys:
             return '{0}-let-pss.zip'.format(self.name)
         else:
             return '{0}-let.ps.gz'.format(self.name)
 
     def pdf_let_spec(self):
+        """Return a filename for the Letter PDF file(s)."""
         if self.has_lys:
             return '{0}-let-pdfs.zip'.format(self.name)
         else:
             return '{0}-let.pdf'.format(self.name)
 
     def pdf_a4_spec(self):
+        """Return a filename for the A4 PDF file(s)."""
         if self.has_lys:
             return '{0}-a4-pdfs.zip'.format(self.name)
         else:
@@ -370,7 +439,8 @@ class RawInstrumentMap(models.Model):
 
 
 class Collection(models.Model):
-    """This class defines a collection of associated pieces. This can
+    """
+    This class defines a collection of associated pieces. This can
     be an entire opus or a other relationship. This has a one-to-many
     relationship with :class:`mutopia.models.CollectionPiece`.
 
@@ -391,9 +461,11 @@ class Collection(models.Model):
         db_table = 'muCollection'
 
 class CollectionPiece(models.Model):
-    """A single piece entity within a collection. This is simple
+    """
+    A single piece entity within a collection. This is simple
     relational object that simply forms a connection between a
     :class:`mutopia.models.Piece` and a :class:`mutopia.models.Collection`.
+
     """
 
     #:Reference to the collection
