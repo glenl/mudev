@@ -4,8 +4,11 @@ For developers, this documents the tools required for contributions
 and outlines the installation on the platform I use (Ubuntu 15.10).
 The project should travel well to other environments.
 
-The project uses `heroku <https://www.heroku.com/home>`_ to demo the
-site. More on that later.
+.. |heroku| raw:: html
+
+                  <a href="https://www.heroku.com/home">heroku</a>
+
+The project uses |heroku| to demo the site. More on that later.
 
 
 Requirements
@@ -91,7 +94,7 @@ To break that down,
 * `psql postgres` - run the ``postgres`` command-line using the
   postgres database (which is where the configuration tables live.)
 * `\\password` is a command to the interpreter to change your password.
-  It will prompt for the new password. 
+  It will prompt for the new password.
 * `\\q` quits the interpreter
 
 Full Text Search
@@ -134,3 +137,56 @@ must match those found in the Django settings file. We give our user
 all privileges on the database and, lastly, we let our user create
 databases so the application tests can create and delete a temporary
 database.
+
+Notes on the Django settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a Django project is started, their admin scripts provide a
+default structure with enough content to allow you to start working
+immediately. The default database is *sqlite* because it is generally
+available and requires little configuration. There are several
+problems to solve in the ``mudev.settings`` module,
+
+ - using postgres as the default database
+ - use heroku for site demos *and* provide local development testing
+
+The way we get around the second problem is by providing a
+``mudev.local_settings`` module that overrides a few things in the
+default file. Here is the portion of the settings module that is
+relevant to the database, ::
+
+  DATABASES = {
+      'default': {
+          'ENGINE': 'django.db.backends.sqlite3',
+          'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+      }
+  }
+
+  DATABASES['default'] = dj_database_url.config()
+
+The definition of the ``DATABASES`` dictionary is left intact then
+overwritten with call to reconfigure the url for |heroku|. Once this
+edit is made you will be unable to run a local server. The workaround
+is to write a ``mudev.local_settings``  module that modifies the main
+settings. Here are the relevant bits, ::
+
+  from mudev.settings import *
+
+  DEBUG = True
+  DATABASES['default'] = {
+      'ENGINE': 'django.db.backends.postgresql',
+      'NAME': 'mutopiadb',
+      'USER': 'muuser',
+      'PASSWORD': 'mumusic',
+      'HOST': '127.0.0.1',
+      'PORT': '5432',
+  }
+
+This puts the burden on the developer to start the server with the
+local module. ::
+
+  (mudevo) $ python manage.py runserver --settings=mudev.local_settings
+
+It is necessary to do this when testing as well. A ``coverage.sh``
+script is provided to make this a little easier to run tests with
+coverage analysis.
