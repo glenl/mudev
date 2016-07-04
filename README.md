@@ -1,5 +1,7 @@
 # mudev
 
+[![Documentation Status](https://readthedocs.org/projects/mudev-documentation/badge/?version=latest)](http://mudev-documentation.readthedocs.io/en/latest/?badge=latest)
+
 ## Synopsis
 
 This repository is for development of a Python-based clone of the
