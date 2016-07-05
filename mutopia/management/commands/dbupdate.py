@@ -16,6 +16,7 @@ from rdflib import Graph, URIRef, Namespace, URIRef
 from rdflib.term import Literal
 import requests
 from requests.auth import HTTPBasicAuth
+from urllib.error import HTTPError
 
 MP = Namespace('http://www.mutopiaproject.org/piece-data/0.1/')
 git_headers = {'Accept' : 'application/vnd.github.v3+json'}
@@ -84,13 +85,17 @@ class Command(BaseCommand):
         rmap = AssetMap.objects.all().filter(piece__isnull=True)
         for r in rmap:
             path = '/'.join([FTP_URL, r.folder, r.name+'.rdf',])
-            print(path)
-            graph = Graph().parse(URIRef(path))
-            # Since we know the composer is required (which we have
-            # from the spec) we can get the subject.
-            mp_subj = graph.value(subject=None,
-                                  predicate=MP.composer,
-                                  object=Literal(r.get_composer()))
+            self.stdout.write(path)
+            try:
+                graph = Graph().parse(URIRef(path))
+            except (FileNotFoundError, HTTPError):
+                # This AssetMap element is invalid somehow, just delete it.
+                r.delete()
+                continue
+
+            # Because our RDF's are defined as 'rdf:about:"."' the subject
+            # is an URI reference to the containing folder
+            mp_subj = URIRef('/'.join([FTP_URL, r.folder,]) + '/')
 
             # A footer isn't stored in the database but its bit parts are.
             footer = graph.value(mp_subj, MP.id)
@@ -124,7 +129,7 @@ class Command(BaseCommand):
             piece.maintainer = Contributor.find_or_create(
                 graph.value(mp_subj, MP.maintainer),
                 email=graph.value(mp_subj, MP.maintainerEmail),
-                url=-graph.value(mp_subj, MP.maintainerWeb))
+                url=graph.value(mp_subj, MP.maintainerWeb))
             piece.version = LPVersion.find_or_create(
                 graph.value(mp_subj, MP.lilypondVersion))
             piece.lyricist = graph.value(mp_subj, MP.lyricist)
@@ -152,7 +157,7 @@ class Command(BaseCommand):
                     if rdftuple is not None:
                         rdfset.add(rdftuple)
             else:
-                print('Oops, got status code {0}'.format(r.status_code))
+                self.stdout.write('Oops, got status code {0}'.format(r.status_code))
         return rdfset
 
 
