@@ -13,4 +13,5 @@
    <a href="https://www.heroku.com/home">heroku</a>
 
 .. |psql| raw:: html
+
    <a href="https://www.postgresql.org/docs/9.4/static/app-psql.html">psql</a>

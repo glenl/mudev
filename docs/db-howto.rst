@@ -4,7 +4,7 @@ Database How-to
 .. include:: subs.txt
 
 This section covers basic database details like :ref:`db-populating`,
-:ref:`db-updating`, and a short introduction to :ref:`db-queries`.
+:ref:`db-updating`.
 
 Required reading:
 
@@ -88,8 +88,9 @@ physical publication in the archive (its *assets*) as well as playing a role
 in updating. Here is the outline of how an update works,
 
  - Read the timestamp in an ``UpdateMarker``
- - Use the github-api, query a one-line log from the github repository
-   of changes since this timestamp
+ - Using the `github-api <https://developer.github.com/v3/>`_, query a
+   one-line log from the github repository of changes since this
+   timestamp
  - Parse each line to find new and changed assets.
  - For each changed asset, update its corresponding row in the
    ``AssetMap`` and zero out its ``Piece`` reference.
