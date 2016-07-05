@@ -3,9 +3,12 @@
 
 Welcome to Mutopia Devo
 =======================
+
+.. include:: subs.txt
+
 This is development documentation of a drop-in replacement for the
-MutopiaProject web-site written in Python using the `Django
-<https://docs.djangoproject.com/en/1.9/>`_ framework.
+MutopiaProject web-site written in Python using the |django|
+framework.
 
 Contents:
 
@@ -13,6 +16,7 @@ Contents:
    :maxdepth: 2
 
    getting-started
+   db-howto
    modules/mutopia
 
 

@@ -1,0 +1,16 @@
+.. Substitutions for mudev documentation
+
+.. |mutopia| raw:: html
+
+   <a href="http://www.mutopiaproject.org">Mutopia Project</a>
+
+.. |django| raw:: html
+
+   <a href="https://docs.djangoproject.com/en/1.9">Django</a>
+
+.. |heroku| raw:: html
+
+   <a href="https://www.heroku.com/home">heroku</a>
+
+.. |psql| raw:: html
+   <a href="https://www.postgresql.org/docs/9.4/static/app-psql.html">psql</a>

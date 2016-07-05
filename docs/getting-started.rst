@@ -1,12 +1,11 @@
 Getting Started
 ===============
+
+.. include:: subs.txt
+
 For developers, this documents the tools required for contributions
 and outlines the installation on the platform I use (Ubuntu 15.10).
 The project should travel well to other environments.
-
-.. |heroku| raw:: html
-
-                  <a href="https://www.heroku.com/home">heroku</a>
 
 The project uses |heroku| to demo the site. More on that later.
 
@@ -30,7 +29,7 @@ and read a little more about what will be installed.
  - **whitenoise** - simplified static file serving, for Heroku.
  - **Django** - web frameworks.
  - **isodate** - used for date formatting.
- - **psycopg2** - required for PostgreSQL database backend in Django.
+ - **psycopg2** - required for PostgreSQL database backend in |django|.
  - **pyparsing** -
  - **rdflib** - for reading RDF files.
  - **requests** - simplified internet requests.
@@ -70,6 +69,7 @@ Look through these and select one, then have pip go to work, ::
 You may have as many environments as you like but take care to use
 (``workon``) the correct environment when you develop code in this project.
 
+.. _pg-configure-label:
 
 Configuring PostgreSQL
 ----------------------
@@ -114,12 +114,15 @@ above, you are actually modifying the default database configuration
 for all users. You want to do this in the event you write tests that
 use this extension.
 
+.. _pg-django-label:
+
+
 The Database for Django
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The default database for a Django project
+The default database for a |django| project
 is SQLite, which is convenient since it requires no extra
-configuration. In that mode, Django will do all the work of creating
+configuration. In that mode, |django| will do all the work of creating
 the database and its tables without much grief from the user. To have
 FTS we need to switch the database back-end to `postgres` and that
 means extra configuration is required. Here are the steps, ::
@@ -131,17 +134,19 @@ means extra configuration is required. Here are the steps, ::
   ALTER USER muuser CREATEDB;
 
 The ``createdb`` used in the first line is a utility provided by the
-``postgresql`` installation. The next few steps use the ``psql`` utility
+``postgresql`` installation. The next few steps use the |psql| utility
 to create a user (*muuser*) with a password. These can be changed but
-must match those found in the Django settings file. We give our user
+must match those found in the |django| settings file. We give our user
 all privileges on the database and, lastly, we let our user create
 databases so the application tests can create and delete a temporary
 database.
 
+.. _pg-notes-label:
+
 Notes on the Django settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a Django project is started, their admin scripts provide a
+When a |django| project is started, their admin scripts provide a
 default structure with enough content to allow you to start working
 immediately. The default database is *sqlite* because it is generally
 available and requires little configuration. There are several
