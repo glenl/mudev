@@ -3,7 +3,7 @@ Database How-to
 
 .. include:: subs.txt
 
-This section covers basic database details like :ref:`db-populating`,
+This section covers basic database details like :ref:`db-populating` and
 :ref:`db-updating`.
 
 Required reading:

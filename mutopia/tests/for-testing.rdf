@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:mp="http://www.mutopiaproject.org/piece-data/0.1/">
+
+<rdf:Description rdf:about=".">
+    <mp:title>Prelude: Op. 28, No. 1</mp:title>
+    <mp:composer>ChopinFF</mp:composer>
+    <mp:opus>Op. 28</mp:opus>
+    <mp:lyricist/>
+    <mp:for>Piano</mp:for>
+    <mp:date>c. 1837</mp:date>
+    <mp:style>Romantic</mp:style>
+    <mp:metre/>
+    <mp:arranger/>
+    <mp:source>Edition Peters</mp:source>
+    <mp:licence>Creative Commons Attribution-ShareAlike 4.0</mp:licence>
+
+    <mp:lyFile>Chop-28-1.ly</mp:lyFile>
+    <mp:midFile>Chop-28-1.mid</mp:midFile>
+    <mp:psFileA4>Chop-28-1-a4.ps.gz</mp:psFileA4>
+    <mp:pdfFileA4>Chop-28-1-a4.pdf</mp:pdfFileA4>
+    <mp:psFileLet>Chop-28-1-let.ps.gz</mp:psFileLet>
+    <mp:pdfFileLet>Chop-28-1-let.pdf</mp:pdfFileLet>
+    <mp:pngFile>Chop-28-1-preview.png</mp:pngFile>
+    <mp:pngHeight>148</mp:pngHeight>
+    <mp:pngWidth>539</mp:pngWidth>
+
+    <mp:id>Mutopia-2014/02/24-411</mp:id>
+    <mp:maintainer>Donald Axel</mp:maintainer>
+    <mp:maintainerEmail>dax2@tele2adsl.dk</mp:maintainerEmail>
+    <mp:maintainerWeb/>
+    <mp:moreInfo/>
+    <mp:lilypondVersion>2.18.2</mp:lilypondVersion>
+</rdf:Description>
+
+</rdf:RDF>
