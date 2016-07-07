@@ -103,11 +103,12 @@ Full Text Search
 FTS is available by default in postgres but the
 normalization of accented characters is an extension that, while built
 in, needs to be enabled in order to work. The extension is called
-*unaccent* and it is enabled as follows, ::
+*unaccent* and it can be enabled by creating an extension on the
+database. In the following command it creates the extension on a
+database called *template1* which sets up *unaccent* on the
+default database template, ::
 
-  $ sudo -u postgres psql postgres
-  postgres=# create extension unaccent;
-  postgres=# \q
+  $ sudo -u postgres psql -d template1 -c 'create extension unaccent;'
 
 Note that when you make changes to the **postgres** database, as
 above, you are actually modifying the default database configuration
