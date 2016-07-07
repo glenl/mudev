@@ -6,4 +6,4 @@ coverage run --source=mutopia                   \
          -v2                                    \
          --settings=mudev.local_settings
 
-coverage report --show-missing
+coverage html --omit='mutopia/migrations/*','mutopia/tests/*'
