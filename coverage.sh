@@ -1,9 +1,12 @@
 #!/bin/sh
 # Quick script to run tests with coverage analysis
 #
-coverage run --source=mutopia                   \
-         manage.py test mutopia.tests           \
-         -v2                                    \
+coverage run --source=mutopia                               \
+         --branch                                           \
+         --omit='mutopia/migrations/*','mutopia/tests/*'    \
+         manage.py test mutopia.tests                       \
+         -v2                                                \
          --settings=mudev.local_settings
 
-coverage html --omit='mutopia/migrations/*','mutopia/tests/*'
+# Generate html report (htmlcov/index.html)
+coverage html
