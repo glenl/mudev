@@ -19,12 +19,21 @@ def load_some_instruments():
     Instrument.objects.create(instrument='Banjo', in_mutopia=True).save()
 
 def make_piece():
-    c = Composer.objects.create(composer='JayJ', description='Joe Jay (1888--1944')
+    try:
+        p = Piece.objects.get(pk=1)
+        return p
+    except Piece.DoesNotExist:
+        pass
+
+    c = Composer.objects.create(composer='JayJ',
+                                description='Joe Jay (1888--1944')
     c.save()
     s = create_style('Swing')
     s.save()
     v = LPVersion.find_or_create('2.19.35')
-    m = Contributor.find_or_create('John Smith', 'JSmith@example.com', 'johnsmith.com')
+    m = Contributor.find_or_create('John Smith', 
+                                   'JSmith@example.com',
+                                   'johnsmith.com')
     cc = License.objects.create(name='Public', url='http://public-domain/')
     p = Piece.objects.create(piece_id=1,
                              title='Flimmin on the Jimjam',
@@ -38,7 +47,8 @@ def make_piece():
                              date_published=date.today(),
                              source='original manuscript')
     p.save()
-    instr = Instrument.objects.create(instrument='Piano', in_mutopia=True)
+    instr = Instrument.objects.create(instrument='Piano',
+                                      in_mutopia=True)
     instr.save()
     p.instruments.add(instr)
     p.save()

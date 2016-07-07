@@ -195,6 +195,17 @@ class Instrument(models.Model):
     #:*unofficial* instrument names.
     in_mutopia = models.BooleanField(default=False)
 
+    @classmethod
+    def find_or_create(self, instrument, in_mutopia=False):
+        try:
+            i = Instrument.objects.get(instrument=instrument)
+            return i
+        except Instrument.DoesNotExist:
+            i = Instrument.objects.create(instrument=instrument,
+                                          in_mutopia=in_mutopia)
+            i.save()
+            return i
+
     def __str__(self):
         return self.instrument
 
