@@ -9,6 +9,7 @@
 from django.db import models
 import os.path
 from mutopia.utils import FTP_URL
+from django.utils.text import slugify
 
 class Composer(models.Model):
     """
@@ -78,21 +79,6 @@ class Contributor(models.Model):
             return self.email.replace('@', ' (at) ')
         return self.email
 
-    @classmethod
-    def find_or_create(self, m_maintainer, email='', url=''):
-        """Factory method for creating a ``Contributor`` instance.
-        :param str m_maintainer: Name of the contributor.
-        :param str email: Email address (optional).
-        :param str url: Web or relevant internet reference (optional).
-        """
-        try:
-            c = Contributor.objects.get(name=m_maintainer)
-            return c
-        except Contributor.DoesNotExist:
-            c = Contributor(name=m_maintainer, email=email, url=url)
-            c.save()
-            return c
-
     class Meta:
         db_table = 'muContributor'
         ordering = ['name']
@@ -111,6 +97,18 @@ class Style(models.Model):
     slug = models.SlugField(max_length=32)
     #:Boolean flag to specify whether this style was in the original MutopiaProject.
     in_mutopia = models.BooleanField(default=False)
+
+    @classmethod
+    def find_or_create(self, p_style, in_mutopia=False):
+        try:
+            s = Style.objects.get(style=p_style)
+            return s
+        except Style.DoesNotExist:
+            s = Style.objects.create(style=p_style,
+                                     slug=slugify(p_style),
+                                     in_mutopia=in_mutopia)
+            s.save()
+            return s
 
     def __str__(self):
         return self.style
@@ -149,11 +147,12 @@ class LPVersion(models.Model):
         except LPVersion.DoesNotExist:
             v = LPVersion(version=lpversion)
             bits = lpversion.split('.',2)
+            # Expect at least major.minor
             v.major = bits[0]
-            if len(bits) > 1:
-                v.minor = bits[1]
-                if len(bits) > 2:
-                    v.edit = bits[2]
+            v.minor = bits[1]
+            # ... but we may not have major.minor.edit
+            if len(bits) > 2:
+                v.edit = bits[2]
             v.save()
             return v
 
@@ -194,17 +193,6 @@ class Instrument(models.Model):
     #:collection of Mutopia instruments. This allows the addition of
     #:*unofficial* instrument names.
     in_mutopia = models.BooleanField(default=False)
-
-    @classmethod
-    def find_or_create(self, instrument, in_mutopia=False):
-        try:
-            i = Instrument.objects.get(instrument=instrument)
-            return i
-        except Instrument.DoesNotExist:
-            i = Instrument.objects.create(instrument=instrument,
-                                          in_mutopia=in_mutopia)
-            i.save()
-            return i
 
     def __str__(self):
         return self.instrument
@@ -463,7 +451,7 @@ class Collection(models.Model):
 
     def user_infofile(self):
         """Return a filename for the optional collection data file."""
-        return os.path.join(['collections', self.tag, 'collection-info.dat'])
+        return '/'.join(['collections', self.tag, 'collection-info.dat',])
 
     def __str__(self):
         return self.tag

@@ -2,7 +2,6 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.utils.text import slugify
 from mutopia.forms import AdvSearchForm
-from mutopia.models import Composer, Instrument, Style
 from .utilities import load_some_composers, load_some_styles, load_some_instruments
 
 class FormTests(TestCase):

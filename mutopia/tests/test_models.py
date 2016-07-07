@@ -4,47 +4,58 @@ from django.utils.text import slugify
 from django.utils import timezone
 from mutopia.models import Composer, Contributor, Style, LPVersion, Piece
 from mutopia.models import UpdateMarker, License, AssetMap, RawInstrumentMap
-from mutopia.models import Instrument
+from mutopia.models import Instrument, Tag
+from mutopia.models import Collection, CollectionPiece
 from .utilities import make_piece
 
 class ComposerTests(TestCase):
     def test_composer(self):
-        homer = Composer.objects.create(composer='SimpsonH', description='Homer Simpson(1999--)')
+        homer,_ = Composer.objects.get_or_create(composer='SimpsonH',
+                                               description='Homer Simpson(1999--)')
         self.assertTrue(isinstance(homer, Composer))
-        self.assertEqual(homer.__str__(), homer.composer)
+        self.assertEqual(str(homer), homer.composer)
         self.assertFalse(re.search('[\(\)0-9]', homer.rawstr()))
 
+    def test_composer_byline(self):
+        trad = Composer.objects.create(composer='Traditional')
+        self.assertTrue(isinstance(trad, Composer))
+        self.assertFalse(re.search('by', trad.byline()))
+        homer,_ = Composer.objects.get_or_create(composer='SimpsonH',
+                                                 description='Homer Simpson(1999--)')
+        self.assertTrue(re.search('by', homer.byline()))
 
 class ContributorTests(TestCase):
     def test_contributor(self):
         # create a contributor
-        c = Contributor.find_or_create('John Smith', 'JSmith@example.com', 'johnsmith.com')
+        c,_ = Contributor.objects.get_or_create(name='John Smith',
+                                                email='JSmith@example.com',
+                                                url='johnsmith.com')
         self.assertTrue(isinstance(c, Contributor))
         self.assertFalse(re.search('@', c.reformat_email()))
         self.assertEqual(c.__str__(), c.name)
         # find an existing contributor
-        c2 = Contributor.find_or_create('John Smith')
+        c2,_ = Contributor.objects.get_or_create(name='John Smith')
         self.assertEqual(c.email, c2.email)
 
     def test_missing_field(self):
         # create a contributor with no email field
-        no_email = Contributor.find_or_create('Jason Smith', url='jasonsmith.com')
+        no_email,_ = Contributor.objects.get_or_create(name='Jason Smith', url='jasonsmith.com')
+        self.assertTrue(isinstance(no_email, Contributor))
         self.assertFalse(re.search('@', no_email.reformat_email()))
         self.assertEqual(len(no_email.email), len(no_email.reformat_email()))
 
 
 class StyleTests(TestCase):
-    def create_style(self, s):
-        return Style.objects.create(style=s, slug=slugify(s), in_mutopia=False)
 
     def test_style(self):
-        sluggable = self.create_style('old age')
+        sluggable = Style.find_or_create('old age')
         self.assertTrue(isinstance(sluggable, Style))
         self.assertEqual(str(sluggable), sluggable.style)
         self.assertNotEqual(str(sluggable), sluggable.slug)
 
 
 class LPVersionTests(TestCase):
+
     def test_version(self):
         v1 = LPVersion.find_or_create('1.2.3')
         self.assertTrue(isinstance(v1, LPVersion))
@@ -55,6 +66,13 @@ class LPVersionTests(TestCase):
         self.assertEqual(v1.__str__(), v1.version)
         v2 = LPVersion.find_or_create('1.2.3')
         self.assertEqual(str(v1), str(v2))
+
+        # for a branch test
+        v3 = LPVersion.find_or_create('12.2')
+        self.assertTrue(isinstance(v3, LPVersion))
+
+        with self.assertRaisesMessage(IndexError, 'list index out of range'):
+            v4 = LPVersion.find_or_create('10')
 
 class PieceTests(TestCase):
     def test_piece(self):
@@ -100,16 +118,38 @@ class AssetMapTests(TestCase):
 
 class InstrumentTests(TestCase):
     def test_instrument(self):
-        k = Instrument.objects.create(instrument='kazoo', in_mutopia=False)
+        k,_ = Instrument.objects.get_or_create(instrument='kazoo', in_mutopia=False)
         self.assertTrue(isinstance(k, Instrument))
         k.save()
-        k2 = Instrument.find_or_create('kazoo')
+        k2,_ = Instrument.objects.get_or_create(instrument='kazoo')
         self.assertEqual(k, k2)
 
 class RawInstrumentMapTests(TestCase):
     def test_instrument_map(self):
-        bagpipe = Instrument.find_or_create(instrument='bagpipe')
+        bagpipe,_ = Instrument.objects.get_or_create(instrument='bagpipe')
         self.assertTrue(str(bagpipe))
         r1 = RawInstrumentMap.objects.create(raw_instrument='Windbag',
                                              instrument=bagpipe)
         self.assertTrue(str(r1))
+
+
+class TagTests(TestCase):
+    def test_tag(self):
+        ensemble,_ = Tag.objects.get_or_create(name='Ensemble')
+        self.assertTrue(isinstance(ensemble, Tag))
+        self.assertTrue(str(ensemble))
+
+class CollectionTest(TestCase):
+    def test_collections(self):
+        ctitle = 'Test Collection'
+        c,_ = Collection.objects.get_or_create(tag='testc',title=ctitle)
+        self.assertTrue(isinstance(c, Collection))
+        self.assertTrue(str(c))
+
+        p = make_piece()
+        cp,_ = CollectionPiece.objects.get_or_create(collection=c, piece=p)
+        self.assertTrue(isinstance(cp, CollectionPiece))
+        self.assertTrue(str(cp))
+        self.assertTrue(re.search(ctitle, str(cp)))
+
+        self.assertTrue(re.search('info\.dat', c.user_infofile()))

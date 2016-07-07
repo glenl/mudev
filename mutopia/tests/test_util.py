@@ -21,9 +21,13 @@ class UtilityTests(TestCase):
         footer = 'Mutopia-2012/10/20-123'
         (pdate,id) = id_from_footer(footer)
         self.assertEqual(id, '123')
+
         # bad footers should just return false
         self.assertFalse(id_from_footer('bad-1882/4/4-999'))
         self.assertFalse(id_from_footer('Mutopia-today/5'))
+
+        # cover the empty argument branch
+        self.assertIsNone(id_from_footer(''))
 
     def test_singleton(self):
         s = Adder.Instance()
