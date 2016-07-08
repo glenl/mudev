@@ -200,7 +200,7 @@ def fts_search(keywords):
 def key_results(request):
     """
     This responds to keyword search request (typically from the entry
-    box on the jumbotron but could be anywhere. If there are more than
+    box on the jumbotron but could be anywhere. If there is more than
     one page, this routine may be re-entered to process other pages.
 
     """

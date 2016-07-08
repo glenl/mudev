@@ -1,17 +1,19 @@
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
-from mutopia.views import handler404
+from mutopia.forms import KeySearchForm
+from mutopia.views import handler404, key_results
 from mutopia.models import Composer, Instrument, Style
 from .utilities import load_some_composers, load_some_styles, load_some_instruments
 from mudev import urls
+
 
 class ViewTests(TestCase):
     def setUp(self):
         load_some_composers()
         load_some_styles()
         load_some_instruments()
-
+        
     def test_404(self):
         self.assertTrue(urls.handler404.endswith('.handler404'))
         factory = RequestFactory()
@@ -24,6 +26,7 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, template)
 
+
     def test_all_menus(self):
         p = [('home', 'index.html'),
              ('browse', 'browse.html'),
@@ -34,3 +37,9 @@ class ViewTests(TestCase):
         ]
         for (name,template) in p:
             self.check_menu(name, template)
+
+
+    def test_adv_results(self):
+        response = self.client.get(reverse('adv-results'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'results.html')
