@@ -78,7 +78,7 @@ class ViewTests(TestCase):
         self.assertTemplateUsed(response, 'piece_version.html')
 
 
-    def test_piece_by_compser(self):
+    def test_piece_by_composer(self):
         c = Composer.objects.all()[0]
         response = self.client.get(reverse('piece-by-composer', args=[c.composer]))
         self.assertEqual(response.status_code, 200)
