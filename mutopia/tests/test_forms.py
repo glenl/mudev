@@ -6,7 +6,8 @@ from .utilities import load_some_composers, load_some_styles, load_some_instrume
 
 class FormTests(TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         load_some_instruments()
         load_some_styles()
         load_some_composers()

@@ -3,8 +3,10 @@ from .utilities import make_piece
 from mutopia.rss import AtomLatestFeed
 from datetime import date
 
-class RssTests(TestCase):
-    def setUp(self):
+class RSSTests(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
         p = make_piece()
         p.date_published = date.today()
         p.title = 'RSS Test'
