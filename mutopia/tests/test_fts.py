@@ -44,4 +44,4 @@ class FTSTests(TestCase):
         # On bad input, search raises a programming error. Add others
         # here as you like.
         with self.assertRaises(ProgrammingError):
-            p_set = fts_search('\(garbage!')
+            p_set = fts_search('!++&')
