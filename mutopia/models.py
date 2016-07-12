@@ -231,16 +231,6 @@ class License(models.Model):
         ordering = ['name']
 
 
-class Tag(models.Model):
-    name = models.CharField(max_length=32, primary_key=True)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        db_table = 'muTag'
-
-
 class Piece(models.Model):
     """
     A ``Piece`` defines a complete MutopiaProject archive entity. Most
@@ -303,9 +293,6 @@ class Piece(models.Model):
     #:Adding instruments as a relationship instead of an attribute
     #:allows a more controlled and accurate search.
     instruments = models.ManyToManyField(Instrument)
-    #:Tags are free-form attributes that can be applied to a piece.
-    #:Not currently used.
-    tags = models.ManyToManyField(Tag)
 
     def __str__(self):
         return '{0} - {1}'.format(self.piece_id, self.title)
