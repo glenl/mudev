@@ -4,8 +4,8 @@ from django.utils.text import slugify
 from django.utils import timezone
 from mutopia.models import Composer, Contributor, Style, LPVersion, Piece
 from mutopia.models import UpdateMarker, License, AssetMap, RawInstrumentMap
-from mutopia.models import Instrument, Tag
-from mutopia.models import Collection, CollectionPiece
+from mutopia.models import Instrument
+from mutopia.models import Collection
 from .utilities import make_piece
 
 class ComposerTests(TestCase):
@@ -133,23 +133,21 @@ class RawInstrumentMapTests(TestCase):
         self.assertTrue(str(r1))
 
 
-class TagTests(TestCase):
-    def test_tag(self):
-        ensemble,_ = Tag.objects.get_or_create(name='Ensemble')
-        self.assertTrue(isinstance(ensemble, Tag))
-        self.assertTrue(str(ensemble))
-
 class CollectionTest(TestCase):
     def test_collections(self):
         ctitle = 'Test Collection'
         c,_ = Collection.objects.get_or_create(tag='testc',title=ctitle)
         self.assertTrue(isinstance(c, Collection))
         self.assertTrue(str(c))
+        self.assertTrue(c.user_infofile().endswith('info.dat'))
 
         p = make_piece()
-        cp,_ = CollectionPiece.objects.get_or_create(collection=c, piece=p)
-        self.assertTrue(isinstance(cp, CollectionPiece))
-        self.assertTrue(str(cp))
-        self.assertTrue(re.search(ctitle, str(cp)))
+        # not yet a part of any collection
+        colset = p.collection_set.all()
+        self.assertQuerysetEqual(colset, [])
 
-        self.assertTrue(re.search('info\.dat', c.user_infofile()))
+        # add the piece
+        c.pieces.add(p)
+        # get the set of collections from the piece
+        colset = p.collection_set.all()
+        self.assertQuerysetEqual(colset, [str(c)], transform=str)

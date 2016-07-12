@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import get_object_or_404, render
 from mutopia.models import Piece, Composer, License, Style, Instrument
-from mutopia.models import Collection, CollectionPiece, AssetMap, LPVersion
+from mutopia.models import Collection, AssetMap, LPVersion
 from mutopia.forms import KeySearchForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from mutopia.utils import FTP_URL
@@ -20,7 +20,7 @@ def piece_info(request, piece_id):
         'preview_image': '/'.join([FTP_URL, asset.folder, asset.name+'-preview.png',]),
         'instruments': piece.instruments.all(),
     }
-    collection = Collection.objects.filter(collectionpiece__piece=piece_id)
+    collection = piece.collection_set.all()
     if collection.count() > 0:
         context['collection'] = collection[0]
     return render(request, 'piece_info.html', context)
@@ -116,10 +116,9 @@ def piece_by_version(request, version):
 
 def collection_list(request, col_tag):
     col = Collection.objects.get(tag=col_tag)
-    # Check out the cool reverse lookup for the list of pieces.
     context = {
         'keyform': KeySearchForm(auto_id=False),
         'title': col.title,
-        'col_pieces': Piece.objects.filter(collectionpiece__collection=col_tag)
+        'col_pieces': col.pieces.all()
     }
     return render(request, 'collection.html', context)
