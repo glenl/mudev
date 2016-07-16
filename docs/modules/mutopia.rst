@@ -6,7 +6,8 @@ mutopia.models module
 ---------------------
 
 .. automodule:: mutopia.models
-    :members:
+    :members: Composer, Contributor, Style, LPVersion, Instrument, License, Piece,
+              Collection, RawInstrumentMap, SearchTerm, AssetMap, UpdateMarker
 
 mutopia.forms module
 --------------------

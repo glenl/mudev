@@ -10,13 +10,13 @@ from django.http import HttpResponseRedirect
 from django.db import connection, ProgrammingError
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from mutopia.models import Piece, Composer, License, Style, Instrument, Collection
+from mutopia.models import SearchTerm
 from mutopia.forms import KeySearchForm, AdvSearchForm, SearchInterval
 from mutopia.forms import composer_choices, instrument_choices, style_choices
 from mutopia.forms import SearchInterval
 import re
 import time
 import datetime
-import string
 
 def homepage(request):
     """
@@ -158,89 +158,6 @@ def contact(request):
     return render(request, 'contact.html', context)
 
 
-# FTS is not supported directly in Django so we are going to execute a
-# manual query. This is a format string that is designed to be filled
-# in by a keyword string to form the query.
-_PG_FTSQ = """SELECT piece_id FROM mu_search_table \
-WHERE document @@ to_tsquery('english', '{0}')"""
-
-
-def _sanitize_search_term(term):
-    # Replace all puncuation with spaces.
-    allowed_punctuation = set(['&', '|', '"', "'"])
-    all_punctuation = set(string.punctuation)
-    punctuation = "".join(all_punctuation - allowed_punctuation)
-    term = re.sub(r"[{}]+".format(re.escape(punctuation)), " ", \
-            term)
-
-    # Substitute all double quotes to single quotes.
-    term = term.replace('"', "'")
-    term = re.sub(r"[']+", "'", term)
-
-    # Create regex to find strings within quotes.
-    quoted_strings_re = re.compile(r"('[^']*')")
-    space_between_words_re = re.compile(r'([^ &|])[ ]+([^ &|])')
-    spaces_surrounding_letter_re = re.compile(r'[ ]+([^ &|])[ ]+')
-    multiple_operator_re = re.compile(r"[ &]+(&|\|)[ &]+")
-
-    tokens = quoted_strings_re.split(term)
-    processed_tokens = []
-    for token in tokens:
-        # Remove all surrounding whitespace.
-        token = token.strip()
-
-        if token in ['', "'"]:
-            continue
-
-        if token[0] != "'":
-            # Surround single letters with &'s
-            token = spaces_surrounding_letter_re.sub(r' & \1 & ', token)
-
-            # Specify '&' between words that have neither | or & specified.
-            token = space_between_words_re.sub(r'\1 & \2', token)
-
-            # Add a prefix wildcard to every search term.
-            token = re.sub(r'([^ &|]+)', r'\1:*', token)
-
-        processed_tokens.append(token)
-
-    term = " & ".join(processed_tokens)
-
-    # Replace ampersands or pipes surrounded by ampersands.
-    term = multiple_operator_re.sub(r" \1 ", term)
-
-    # Escape single quotes
-    return term.replace("'", "''")
-
-
-def fts_search(keywords):
-    """
-    Given keyword string, search using FTS. Because FTS is not a supported
-    feature of django and SQLite, it is faked here by using a manual
-    query that returns keys for the muPiece table (model.Piece). This
-    gets translated into a QuerySet of Pieces using a filter.
-
-      * The keyword string may contain directives to the postgres FTS
-        engine in which case the keyword string is executed directly as-is.
-      * Otherwise, the keywords are broken apart and AND'ed together.
-
-
-    :param str keywords: Input from the user
-    :return: Zero or more Pieces.
-    :rtype: A Piece query set.
-
-    """
-
-    cursor = connection.cursor()
-    search_term = _sanitize_search_term(keywords)
-    cursor.execute(_PG_FTSQ.format(search_term))
-
-    # Get the results as a simple list of ids for the filter
-    results = [ row[0] for row in cursor.fetchall() ]
-
-    return Piece.objects.filter(pk__in=results)
-
-
 def key_results(request):
     """
     This responds to keyword search request (typically from the entry
@@ -263,7 +180,7 @@ def key_results(request):
     keywords = request.session.get('keywords', '')
 
     try:
-        q = fts_search(keywords)
+        q = SearchTerm.search(keywords)
     except ProgrammingError:
         context = {
             'active' : 'None',
@@ -344,7 +261,7 @@ def adv_results(request):
     # Now walk through the session variables to do the query and
     # filtering.
     if len(request.session['searchingfor']) > 0:
-        q = fts_search(request.session['searchingfor'])
+        q = SearchTerm.search(request.session['searchingfor'])
     else:
         q = Piece.objects.all()
 
