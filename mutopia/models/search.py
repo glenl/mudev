@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
-"""These are search-related models for the |django| ORM. These were separated
-into a subpackage when it was realized that test objects needed to create
-the materialized view for |postgres|. This localizes all of the full
-text search (FTS) into a single module.
+"""These are search-related elements for the |django| ORM, which have
+been moved to a separate model because the FTS implementation with
+requires a *hybrid* implementation that is different than the other
+models. The functionality was moved here to make it easier to support
+test routines for our FTS implementation.
+
+There is no FTS support in |django| but it can be made to work with a
+model that shadows a |postgres| materialized view built to contain
+search terms in a specially constructed document.
 
 .. moduleauthor:: Glen Larsen, glenl.glx at gmail.com
 
@@ -34,10 +39,10 @@ AS SELECT
         to_tsvector('english', unaccent(p.moreinfo)) ||
         to_tsvector('english', v.version)
     ) AS document
-FROM "muPiece" as p
-JOIN "muVersion" as v on v.id = p.version_id
-JOIN "muComposer" as c on c.composer = p.composer_id
-JOIN "muContributor" as m on m.id = p.maintainer_id
+    FROM "muPiece" as p
+    JOIN "muVersion" as v on v.id = p.version_id
+    JOIN "muComposer" as c on c.composer = p.composer_id
+    JOIN "muContributor" as m on m.id = p.maintainer_id
 """
 
 MV_INDEX_DROP = 'DROP INDEX IF EXISTS {0}'
@@ -46,7 +51,7 @@ MV_REFRESH = 'REFRESH MATERIALIZED VIEW {0}'
 
 # FTS is not supported directly in Django so we are going to execute a
 # manual query. This is a format string that is designed to be filled
-# in by a keyword string to form the query.
+# in by a keyword sanitized to form the query.
 _PG_FTSQ = """
 SELECT piece_id
    FROM {0}
@@ -74,6 +79,8 @@ class SearchTerm(models.Model):
 
     @classmethod
     def rebuild_view(cls):
+        """Drop and re-create the materialized view and its index."""
+
         cursor = connection.cursor()
         cursor.execute(MV_DROP.format(MV_NAME))
         cursor.execute(MV_CREATE.format(MV_NAME))
@@ -82,6 +89,13 @@ class SearchTerm(models.Model):
 
     @classmethod
     def refresh_view(cls):
+        """After updates and inserts, the materialized view needs to be
+        refreshed. We could do this with a trigger but for now it is
+        simple enough to do it from this class method after processing
+        submissions.
+
+        """
+
         cursor = connection.cursor()
         cursor.execute(MV_REFRESH.format(MV_NAME))
 

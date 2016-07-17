@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""Views are functions that respond to HTTP requests, typically via a URL.
+"""
+
 from django.shortcuts import get_object_or_404, render
 from mutopia.models import Piece, Composer, License, Style, Instrument
 from mutopia.models import Collection, AssetMap, LPVersion
@@ -10,6 +13,16 @@ import requests
 
 
 def piece_info(request, piece_id):
+    """Given a piece identifier, render a page with extended Piece
+    information.
+
+    :param Request request: The HTTP request object
+    :param int piece_id: the identifier (primary key) for a specific Piece
+                     model instance.
+    :return: An HTTP response containing a filled piece_info HTML page.
+
+    """
+
     piece = get_object_or_404(Piece, pk=piece_id)
 
     asset = AssetMap.objects.get(piece=piece_id)
@@ -27,6 +40,13 @@ def piece_info(request, piece_id):
 
 
 def log_info(request, piece_id):
+    """Display the GIT change log for a particular piece.
+
+    :param Request request: The HTTP request object
+    :return: An HTML page containing the log information.
+
+    """
+
     asset = AssetMap.objects.get(piece=piece_id)
     url = '/'.join([FTP_URL, asset.folder, asset.name+'.log',])
     context = {
@@ -38,6 +58,13 @@ def log_info(request, piece_id):
 
 
 def piece_by_instrument(request, instrument):
+    """Render one or more pages of pieces composed for the given instrument.
+
+    :param Request request: The HTTP request object
+    :param str instrument: Instrument used to associate to a Piece.
+    :return: A paginated page of pieces associated with the instrument.
+
+    """
     pieces = Piece.objects.filter(instruments__pk=instrument)
     paginator = Paginator(pieces, 25)
     p = request.GET.get('page')
@@ -57,9 +84,22 @@ def piece_by_instrument(request, instrument):
 
 
 def piece_by_style(request, slug):
+    """Render one or more pages of pieces composed for the given
+    style. Note that the `slug` of the piece is passed so that the
+    *actual style* will be valid as an HTML reference. The one style
+    that is of particular interest is `Popular / Dance` which gets
+    slugged as `popular-dance`.
+
+    :param Request request: The HTTP request object
+    :param str slug: The slug for this style.
+    :return: A paginated page of pieces in the given style.
+    """
+
     # Uses a slug so that "Popular / Dance" looks like a sane URL
     style = Style.objects.get(slug=slug)
+
     paginator = Paginator(Piece.objects.filter(style=style), 25)
+
     p = request.GET.get('page')
     try:
         page = paginator.page(p)
@@ -77,6 +117,15 @@ def piece_by_style(request, slug):
 
 
 def piece_by_composer(request, composer):
+    """Render one or more pages of pieces written by the given composer.
+
+    :param Request request: The HTTP request object.
+    :param str composer: The composer, formatted appropriately to
+        associate with a Composer instance.
+    :return: A paginated page of pieces by the given composer.
+
+    """
+
     comp = Composer.objects.get(pk=composer)
     paginator = Paginator(Piece.objects.filter(composer=comp), 25)
     p = request.GET.get('page')
@@ -96,6 +145,15 @@ def piece_by_composer(request, composer):
 
 
 def piece_by_version(request, version):
+    """Render one or more pages of pieces transcribed by the given
+    LilyPond style.
+
+    :param Request request: The HTTP request object.
+    :param str version: The LilyPond version.
+    :return: A paginated page of pieces transcribed by this version.
+
+    """
+
     v = LPVersion.objects.get(version=version)
     paginator = Paginator(Piece.objects.filter(version=v), 25)
     p = request.GET.get('page')
@@ -115,6 +173,13 @@ def piece_by_version(request, version):
 
 
 def collection_list(request, col_tag):
+    """Display the collection associated with the given tag.
+
+    :param Request request: The HTTP request object
+    :param str col_tag: The tag for looking up the Collection.
+
+    """
+
     col = Collection.objects.get(tag=col_tag)
     context = {
         'keyform': KeySearchForm(auto_id=False),

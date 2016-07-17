@@ -1,4 +1,4 @@
-"""All models for the ORM reside here.
+"""All application models for the ORM reside here.
 
 .. moduleauthor:: Glen Larsen, glenl.glx at gmail.com
 

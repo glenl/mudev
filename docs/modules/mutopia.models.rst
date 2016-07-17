@@ -7,8 +7,6 @@ mutopia.models package
 .. automodule:: mutopia.models
     :members:
 
-Submodules
-----------
 
 mutopia.models.models module
 ----------------------------

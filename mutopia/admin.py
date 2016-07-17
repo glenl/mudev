@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""This modules is used to customize the |django| `Admin` panels.
+Models registered with the `Admin` can be created and deleted using
+the web UI provided by |django|. This UI can be further manipulated if
+necessary.
+"""
+
 from django.contrib import admin
 
 # Register your models here.
