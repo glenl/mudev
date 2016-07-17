@@ -323,7 +323,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'MutopiaDevo', 'Mutopia Devo Documentation',
-     author, 'MutopiaDevo', 'One line description of project.',
+     author, 'MutopiaDevo', 'Mutopia site development in Django.',
      'Miscellaneous'),
 ]
 

@@ -15,3 +15,7 @@
 .. |psql| raw:: html
 
    <a href="https://www.postgresql.org/docs/9.4/static/app-psql.html">psql</a>
+
+.. |postgres| raw:: html
+
+   <a href="https://www.postgresql.org/docs/9.4/">postgres</a>

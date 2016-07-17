@@ -1,3 +1,8 @@
+"""All models for the ORM reside here.
+
+.. moduleauthor:: Glen Larsen, glenl.glx at gmail.com
+
+"""
 from .models import Composer
 from .models import Contributor
 from .models import Style

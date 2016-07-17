@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+"""These are database update-related model for the |django| ORM. In
+particular, the :class:`mutopia.models.AssetMap` is of interest
+because it additionally functions to translate objects of type
+:class:`mutopia.models.Piece` to the physical assets on the the
+storage server.
+
+.. moduleauthor:: Glen Larsen, glenl.glx at gmail.com
+
+"""
+
 from django.db import models
 from mutopia.utils import FTP_URL
 from .models import Piece

@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""These are search-related models for the |django| ORM. These were separated
+into a subpackage when it was realized that test objects needed to create
+the materialized view for |postgres|. This localizes all of the full
+text search (FTS) into a single module.
+
+.. moduleauthor:: Glen Larsen, glenl.glx at gmail.com
+
+"""
 from django.db import models
 from .models import Piece
 from django.db import connection
@@ -42,7 +50,7 @@ MV_REFRESH = 'REFRESH MATERIALIZED VIEW {0}'
 _PG_FTSQ = """
 SELECT piece_id
    FROM {0}
-   WHERE document @@ to_tsquery('english', '{1}')
+   WHERE document @@ to_tsquery('english', unaccent('{1}'))
 """
 
 class SearchTerm(models.Model):
@@ -54,7 +62,7 @@ class SearchTerm(models.Model):
 
     """
 
-    #:The target piece for this search document
+    #:The target piece for this search document.
     piece_id = models.ForeignKey(Piece)
 
     #:The search document for FTS
@@ -80,7 +88,12 @@ class SearchTerm(models.Model):
     @classmethod
     def _sanitize(cls, term):
         """Sanitize input to the search routine.
+
+        :param str term: Input string to clean.
+        :return: A sanitized string, ready for FTS.
+
         """
+
         # Replace all puncuation with spaces.
         allowed_punctuation = set(['&', '|', '"', "'", '!'])
         all_punctuation = set(string.punctuation)

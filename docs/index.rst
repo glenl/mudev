@@ -17,7 +17,7 @@ Contents:
 
    getting-started
    db-howto
-   modules/mutopia
+   modules/modules
 
 
 Indices and tables
