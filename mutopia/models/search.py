@@ -27,18 +27,19 @@ CREATE MATERIALIZED VIEW {0}
 AS SELECT
     p.piece_id,
     p.piece_id,
-    (to_tsvector('english', unaccent(p.title)) ||
-        to_tsvector('english', unaccent(c.description)) ||
-        to_tsvector('english', unaccent(p.opus)) ||
-        to_tsvector('english', p.style_id) ||
-        to_tsvector('english', unaccent(p.raw_instrument)) ||
-        to_tsvector('english', unaccent(p.lyricist)) ||
-        to_tsvector('english', unaccent(p.source)) ||
-        to_tsvector('english', unaccent(m.name)) ||
-        to_tsvector('english', p.date_composed) ||
-        to_tsvector('english', unaccent(p.moreinfo)) ||
-        to_tsvector('english', v.version)
-    ) AS document
+    (to_tsvector('pg_catalog.simple',
+        concat_ws(' ', unaccent(p.title),
+            unaccent(c.description),
+            unaccent(p.opus),
+            p.style_id,
+            unaccent(p.raw_instrument),
+            unaccent(p.lyricist),
+            unaccent(p.source),
+            unaccent(m.name),
+            p.date_composed,
+            unaccent(p.moreinfo),
+            v.version)
+        )) AS document
     FROM "muPiece" as p
     JOIN "muVersion" as v on v.id = p.version_id
     JOIN "muComposer" as c on c.composer = p.composer_id
@@ -55,7 +56,7 @@ MV_REFRESH = 'REFRESH MATERIALIZED VIEW {0}'
 _PG_FTSQ = """
 SELECT piece_id
    FROM {0}
-   WHERE document @@ to_tsquery('english', unaccent('{1}'))
+   WHERE document @@ to_tsquery('pg_catalog.simple', unaccent('{1}'))
 """
 
 class SearchTerm(models.Model):
@@ -153,14 +154,12 @@ class SearchTerm(models.Model):
         # Escape single quotes
         return term.replace("'", "''")
 
+
     @classmethod
     def search(cls, keywords):
         """Given keyword string, search using FTS. Because FTS is not a
-        supported feature of django and SQLite, it is faked here by
-        using a manual query that returns
-        :class:`mutopia.models.Piece` keys. The results from manual
-        queries do not return true QuerySets so these are translated
-        for the caller with a filter.
+        supported feature of django, it is faked here by using a
+        manual query that returns :class:`mutopia.models.Piece` keys.
 
         :param str keywords: Input from the user
         :return: Zero or more Pieces.
@@ -170,11 +169,13 @@ class SearchTerm(models.Model):
 
         search_term = cls._sanitize(keywords)
         cursor = connection.cursor()
+        results = []
         try:
             cursor.execute(_PG_FTSQ.format(MV_NAME, search_term))
             results = [ row[0] for row in cursor.fetchall() ]
-            return Piece.objects.filter(pk__in=results)
         finally:
             cursor.close()
 
-        return None
+        # The results from manual queries do not return true QuerySets
+        # so these are translated for the caller with a filter.
+        return Piece.objects.filter(pk__in=results)
