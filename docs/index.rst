@@ -16,7 +16,8 @@ Contents:
    :maxdepth: 2
 
    getting-started
-   db-howto
+   mutopia-pub
+   db/db
    modules/modules
 
 

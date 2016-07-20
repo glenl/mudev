@@ -1,7 +1,7 @@
 Database How-to
 ===============
 
-.. include:: subs.txt
+.. include:: ../subs.txt
 
 This section covers basic database details like :ref:`db-populating` and
 :ref:`db-updating`.
@@ -56,7 +56,7 @@ The JSON output is often called a fixture and there is support within
 but I've chosen to dump individual tables so I can load just one table
 if I want. Here is that script,
 
-.. literalinclude:: ../make-fixtures.sh
+.. literalinclude:: ../../make-fixtures.sh
 
 As you might guess the ``load-fixtures.sh`` script looks similar but
 uses the ``loaddata`` command for each fixture. All models are saved,
