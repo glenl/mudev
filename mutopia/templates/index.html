@@ -31,7 +31,7 @@
     <div class="browse-list">
       <ul>
         {% for i in instruments %}
-        <li><a href="{% url 'piece-by-instrument' i.0 %}">{{i.0}}</a> [{{i.1}}]</li>
+        <li><a href="{% url 'piece-by-instrument' i.instrument %}">{{i.instrument}}</a> [{{i.count}}]</li>
         {% endfor %}
       </ul>
       <p><a href="{% url 'browse' %}#byInstrument" class="btn-default btn-sm active" role="button">Show All <span class="glyphicon glyphicon-triangle-right" aria-hidden="true"></span></a></p>
@@ -44,7 +44,7 @@
     <div class="browse-list">
       <ul>
         {% for c in composers %}
-        <li><a href="{% url 'piece-by-composer' c.0 %}">{{c.0.rawstr}}</a> [{{c.1}}]</li>
+        <li><a href="{% url 'piece-by-composer' c.composer %}">{{c.rawstr}}</a> [{{c.count}}]</li>
         {% endfor %}
       </ul>
       <p><a href="{% url 'browse' %}#byComposer" class="btn-default btn-sm active" role="button">Show All <span class="glyphicon glyphicon-triangle-right" aria-hidden="true"></span></a></p>
@@ -57,7 +57,7 @@
     <div class="browse-list">
       <ul>
         {% for s in styles %}
-        <li><a href="{% url 'piece-by-style' s.0|slugify %}">{{s.0}}</a> [{{s.1}}]</li>
+        <li><a href="{% url 'piece-by-style' s.slug %}">{{s.style}}</a> [{{s.count}}]</li>
         {% endfor %}
       </ul>
     </div>
