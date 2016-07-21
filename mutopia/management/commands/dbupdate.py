@@ -126,10 +126,10 @@ class Command(BaseCommand):
             piece.license = License.objects.get(name=graph.value(mp_subj, MP.licence))
             # use routines to get maintainer and version because we
             # might have to create them on the fly
-            piece.maintainer,_ = Contributor.objects.get_or_create(
-                name=graph.value(mp_subj, MP.maintainer),
-                email=graph.value(mp_subj, MP.maintainerEmail),
-                url=graph.value(mp_subj, MP.maintainerWeb))
+            piece.maintainer = Contributor.find_or_create(
+                graph.value(mp_subj, MP.maintainer),
+                graph.value(mp_subj, MP.maintainerEmail),
+                graph.value(mp_subj, MP.maintainerWeb))
             piece.version = LPVersion.find_or_create(
                 graph.value(mp_subj, MP.lilypondVersion))
             piece.lyricist = graph.value(mp_subj, MP.lyricist)

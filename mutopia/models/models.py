@@ -71,6 +71,20 @@ class Contributor(models.Model):
     #:Web or URL entered by the user (optional).
     url = models.URLField(blank=True)
 
+    @classmethod
+    def find_or_create(cls, name, email, url):
+        try:
+            c = Contributor.objects.get(name=name)
+            return c
+        except Contributor.DoesNotExist:
+            c = Contributor.objects.create(name=name,
+                                           email=email,
+                                           url=url)
+            c.save()
+            return c
+            
+            
+
     def __str__(self):
         return self.name
 
