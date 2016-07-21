@@ -9,6 +9,7 @@ from django.template import loader
 from django.http import HttpResponseRedirect
 from django.db import connection, ProgrammingError
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Count
 from mutopia.models import Piece, Composer, License, Style, Instrument, Collection
 from mutopia.models import SearchTerm
 from mutopia.forms import KeySearchForm, AdvSearchForm, SearchInterval
@@ -22,35 +23,21 @@ def homepage(request):
     """
     The home page for the site.
 
-
-    Because the database doesn't associate the count of pieces with
-    the instruments directly, we build a list of tuples that look
-    like::
-
-      (instrument, count-of-pieces-that-reference-this-instrument)
-
-    Then sort on the list by the counts. By doing an inverse search
-    we can display the most *popular* instrument first.
-
-    A similar popularity sort is applied to composers and styles
-
     """
 
-    instruments = []
-    for i in Instrument.objects.filter(in_mutopia=True):
-        instruments.append((i.instrument,
-                            Piece.objects.filter(instruments=i).count()))
-    instruments = sorted(instruments, key=lambda x: x[1], reverse=True)
+    # The number of pieces referencing an instrument isn't provided in
+    # Instrument so we annotate in an extra column using an aggregate,
+    # then do a reverse sort to get the most frequent instrument at
+    # the top of the list.
+    instruments = Instrument.objects.filter(in_mutopia=True)
+    instruments = instruments.annotate(count=Count('piece')).order_by('-count')
 
-    composers = []
-    for c in Composer.objects.all():
-        composers.append((c, Piece.objects.filter(composer=c).count()))
-    composers = sorted(composers, key=lambda x: x[1], reverse=True)
+    # similar for composers and styles
+    composers = Composer.objects.all()
+    composers = composers.annotate(count=Count('piece')).order_by('-count')
 
-    styles = []
-    for s in Style.objects.all():
-        styles.append((s, Piece.objects.filter(style=s).count()))
-    styles = sorted(styles, key=lambda x: x[1], reverse=True)
+    styles = Style.objects.filter(in_mutopia=True)
+    styles = styles.annotate(count=Count('piece')).order_by('-count')
 
     context = {
         'active' : 'home',
