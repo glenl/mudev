@@ -27,8 +27,8 @@ shell command provided by |django|, ::
 
 .. note::
 
-   Throughout these examples, you will need to use the environment
-   that you built for this project.
+   Throughout these examples, you will need to use the virtual
+   environment that you built for this project.
 
 This is great for checking things out but that can get a little clumsy
 when writing larger applications. What would be ideal is if you could
@@ -55,7 +55,8 @@ under the folder :file:`management/commands`. For us that full name is, ::
 
   mudev/mutopia/management/commands/hello.py
 
-To run this, ::
+To run ``hello.py`` you would run it like you would run other
+``manage.py`` applications, ::
 
   (mudev) $ python manage.py hello --settings=mudev.local_settings
   Hello world!
@@ -79,9 +80,9 @@ of code. The query mechanism in |django| is "lazy" so the ``QuerySet``
 object is created but not executed in line 9. The
 ``versions.annotate`` method (line 10) adds a column to the
 ``QuerySet`` named "count" whose value is the number of pieces
-associated with each version object in the set. Finally, the
-``QuerySet`` is ordered in reverse based on the new column. The query
-is not executed until line 12, ::
+associated with each version object in the set. The database query is
+not executed until line 12 where, finally, the ``QuerySet`` is ordered
+in reverse based on the new column.
 
    2.10.33 : 308
     2.16.1 : 294

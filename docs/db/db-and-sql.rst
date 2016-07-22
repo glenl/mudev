@@ -40,7 +40,7 @@ The |psql| command to access the database would be ::
 
 This will prompt you for the password. The solution to using
 this command without having prompt for a password will depend on the
-tool but it might be similar to what I use on linux ::
+tool but it might be similar to what I use on linux, ::
 
   $ cat >~/.pgpass
   localhost:5432:mutopiadb:muuser:mumusic
@@ -197,7 +197,24 @@ And, finally, our top 12, ::
    2.6.4.3 |    41
    2.6.3   |    36
 
-The entire list is of use because there are many with a count of one
-piece for a version so it may be possible to reduce the overall number
-of versions by updating single pieces. This is easier said than done
-in many cases.
+At the bottom of the list there are many instances of versions used by
+a single piece. You can look at these with a slight modification,
+
+.. literalinclude:: version-singles.sql
+   :language: sql
+
+The output suggest many opportunities for cleanup, ::
+
+   version | count
+  ---------+-------
+   2.2.6   |     1
+   2.13.7  |     1
+   2.11.13 |     1
+   2.13.8  |     1
+   2.6.5   |     1
+   2.10.13 |     1
+   2.8.8   |     1
+   2.7.29  |     1
+
+It is common for SQL programming to progress like this. One view of
+the data leads to other ideas for other views.
