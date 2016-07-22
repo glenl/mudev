@@ -24,12 +24,12 @@ a file that can be used by **pip**, the python installer, to install
 the remainder of the tools. You can skip to :ref:`installing` or stay here
 and read a little more about what will be installed.
 
- - **dj-database-url** - used by Heroku.
- - **gunicorn** - wsgi server, used by Heroku.
- - **whitenoise** - simplified static file serving, for Heroku.
+ - **dj-database-url** - used by |heroku|.
+ - **gunicorn** - wsgi server, used by |heroku|.
+ - **whitenoise** - simplified static file serving, for |heroku|.
  - **Django** - web frameworks.
  - **isodate** - used for date formatting.
- - **psycopg2** - required for PostgreSQL database backend in |django|.
+ - **psycopg2** - required for |postgres| database backend with python.
  - **pyparsing** -
  - **rdflib** - for reading RDF files.
  - **requests** - simplified internet requests.
@@ -66,8 +66,8 @@ Look through these and select one, then have pip go to work, ::
 
   (mudevo) $ pip install -r requirements.txt
 
-You may have as many environments as you like but take care to use
-(``workon``) the correct environment when you develop code in this project.
+You may have as many environments as you like but take care to work on
+the correct environment when you develop code in this project.
 
 .. _pg-configure-label:
 
@@ -110,7 +110,7 @@ default database template, ::
 
   $ sudo -u postgres psql -d template1 -c 'create extension unaccent;'
 
-Note that when you make changes to the **postgres** database, as
+Note that when you make changes to the |postgres| database, as
 above, you are actually modifying the default database configuration
 for all users. You want to do this in the event you write tests that
 use this extension.
@@ -125,7 +125,7 @@ The default database for a |django| project
 is SQLite, which is convenient since it requires no extra
 configuration. In that mode, |django| will do all the work of creating
 the database and its tables without much grief from the user. To have
-FTS we need to switch the database back-end to `postgres` and that
+FTS we need to switch the database back-end to |postgres| and that
 means extra configuration is required. Here are the steps, ::
 
   $ sudo -u postgres createdb mutopiadb
@@ -153,13 +153,13 @@ immediately. The default database is *sqlite* because it is generally
 available and requires little configuration. There are several
 problems to solve in the ``mudev.settings`` module,
 
- - using postgres as the default database
- - use heroku for site demos *and* provide local development testing
+ - using |heroku| for the site demos.
+ - using |postgres| as the database for local server simulation and
+   testing.
 
-The way we get around the second problem is by providing a
-``mudev.local_settings`` module that overrides a few things in the
-default file. Here is the portion of the settings module that is
-relevant to the database, ::
+The way we address the first problem is by editing the
+``mudev.settings`` module and override the default database using the
+configuration module provided by |heroku|, ::
 
   DATABASES = {
       'default': {
@@ -170,11 +170,12 @@ relevant to the database, ::
 
   DATABASES['default'] = dj_database_url.config()
 
-The definition of the ``DATABASES`` dictionary is left intact then
-overwritten with call to reconfigure the url for |heroku|. Once this
-edit is made you will be unable to run a local server. The workaround
-is to write a ``mudev.local_settings``  module that modifies the main
-settings. Here are the relevant bits, ::
+But now we have a problem with the second issue, doing local
+simulations and running tests. We get around this by defining a new
+settings module whose purpose is only for local runs. In that module,
+we override the ``DATABASES`` dictionary that was defined.
+
+Our ``mudev.local_settings`` module can look as simple as this, ::
 
   from mudev.settings import *
 
@@ -194,5 +195,5 @@ local module. ::
   (mudevo) $ python manage.py runserver --settings=mudev.local_settings
 
 It is necessary to do this when testing as well. A ``coverage.sh``
-script is provided to make this a little easier to run tests with
+script is provided to make it a little easier to run tests with
 coverage analysis.
