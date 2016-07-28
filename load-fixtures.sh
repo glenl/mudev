@@ -1,7 +1,7 @@
 #!/bin/sh
 LOAD="python manage.py loaddata --settings=mudev.local_settings"
 MODELS="Composer Contributor Style Instrument LPVersion License \
-   Piece Tag RawInstrumentMap CollectionPiece Collection        \
+   Piece Tag RawInstrumentMap Collection                        \
    AssetMap UpdateMarker                                        \
 "
 APP="mutopia"

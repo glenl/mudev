@@ -8,7 +8,7 @@ DATABASES['default'] = {
     'USER': 'muuser',
     'PASSWORD': 'mumusic',
     'HOST': '127.0.0.1',
-    'PORT': '5432',
+    'PORT': '5433',
 }
 
 # Use "DEBUG" level to get DB query times (as well as expected
