@@ -7,7 +7,6 @@
 
 """
 from django.db import models
-import os.path
 from django.utils.text import slugify
 
 class Composer(models.Model):
@@ -38,13 +37,12 @@ class Composer(models.Model):
 
     def rawstr(self):
         """Return only the full name of the composer."""
-        (a,b,c) = self.description.partition('(')
-        return a.rstrip()
+        return self.description.split('(', 1)[0].rstrip()
 
     def byline(self):
         """Return an appropriate line for citing."""
         if self.composer in ['Traditional', 'Anonymous']:
-            return self.rawstr()
+            return self.composer
         else:
             return 'by {0}'.format(self.rawstr())
 
@@ -73,17 +71,27 @@ class Contributor(models.Model):
 
     @classmethod
     def find_or_create(cls, name, email, url):
+        """Find or create a contributor.
+
+        Attempts a lookup of the given contributor. If not found a new
+        Contributor object is created and stored into the database.
+
+        :param str name: Contributor's name (should not be blank)
+        :param str email: optional email of contributor, obfuscated
+        :param url url: optional web site or other address
+        :returns: contributor object
+        :rtype: Contributor
+
+        """
         try:
-            c = Contributor.objects.get(name=name)
-            return c
+            contributor = Contributor.objects.get(name=name)
+            return contributor
         except Contributor.DoesNotExist:
-            c = Contributor.objects.create(name=name,
-                                           email=email,
-                                           url=url)
-            c.save()
-            return c
-            
-            
+            contributor = Contributor.objects.create(name=name,
+                                                     email=email,
+                                                     url=url)
+            contributor.save()
+            return contributor
 
     def __str__(self):
         return self.name
@@ -118,16 +126,25 @@ class Style(models.Model):
     in_mutopia = models.BooleanField(default=False)
 
     @classmethod
-    def find_or_create(self, p_style, in_mutopia=False):
+    def find_or_create(cls, p_style, in_mutopia=False):
+        """Lookup a style object
+
+        :param str p_style: The name of the style
+        :param boolean in_mutopia: True if this style is in original
+                       style list
+        :returns: Filled-in style object
+        :rtype: Style
+
+        """
         try:
-            s = Style.objects.get(style=p_style)
-            return s
+            style = Style.objects.get(style=p_style)
+            return style
         except Style.DoesNotExist:
-            s = Style.objects.create(style=p_style,
-                                     slug=slugify(p_style),
-                                     in_mutopia=in_mutopia)
-            s.save()
-            return s
+            style = Style.objects.create(style=p_style,
+                                         slug=slugify(p_style),
+                                         in_mutopia=in_mutopia)
+            style.save()
+            return style
 
     def __str__(self):
         return self.style
@@ -159,25 +176,27 @@ class LPVersion(models.Model):
     edit = models.CharField(max_length=8, blank=True)
 
     @classmethod
-    def find_or_create(self, lpversion):
-        """Create (or get) the specified LilyPond version.
+    def find_or_create(cls, lpversion):
+        """Lookup the specified LilyPond version.
 
         :param str lpversion: LilyPond version string
+        :returns: LilyPond version object
+        :rtype: LPVersion
         """
         try:
-            v = LPVersion.objects.get(version=lpversion)
-            return v
+            version = LPVersion.objects.get(version=lpversion)
+            return version
         except LPVersion.DoesNotExist:
-            v = LPVersion(version=lpversion)
-            bits = lpversion.split('.',2)
+            version = LPVersion(version=lpversion)
+            bits = lpversion.split('.', 2)
             # Expect at least major.minor
-            v.major = bits[0]
-            v.minor = bits[1]
+            version.major = bits[0]
+            version.minor = bits[1]
             # ... but we may not have major.minor.edit
             if len(bits) > 2:
-                v.edit = bits[2]
-            v.save()
-            return v
+                version.edit = bits[2]
+            version.save()
+            return version
 
     def __str__(self):
         return self.version

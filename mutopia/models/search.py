@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""These are search-related elements for the |django| ORM, which have
+"""
+These are search-related elements for the |django| ORM, which have
 been moved to a separate model because the FTS implementation with
 requires a *hybrid* implementation that is different than the other
 models. The functionality was moved here to make it easier to support
@@ -12,11 +13,11 @@ search terms in a specially constructed document.
 .. moduleauthor:: Glen Larsen, glenl.glx at gmail.com
 
 """
-from django.db import models
-from .models import Piece
-from django.db import connection
 import re
 import string
+from django.db import connection
+from django.db import models
+from .models import Piece
 
 MV_NAME = 'mu_search_view'
 MV_INDEX_NAME = 'mu_search_index'
@@ -53,11 +54,14 @@ MV_REFRESH = 'REFRESH MATERIALIZED VIEW {0}'
 # FTS is not supported directly in Django so we are going to execute a
 # manual query. This is a format string that is designed to be filled
 # in by a keyword sanitized to form the query.
-_PG_FTSQ = """
+p_PG_FTSQ = """
 SELECT piece_id
    FROM {0}
    WHERE document @@ to_tsquery('pg_catalog.simple', unaccent('{1}'))
 """
+_PG_FTSQ = ' '.join([ "SELECT piece_id FROM",
+                      MV_NAME,
+                      "WHERE document @@ to_tsquery('pg_catalog.simple', unaccent(%s))"])
 
 class SearchTerm(models.Model):
     """A model to shadow a Postgres materialized view containing a
@@ -108,7 +112,6 @@ class SearchTerm(models.Model):
         :return: A sanitized string, ready for FTS.
 
         """
-
         # Replace all puncuation with spaces.
         allowed_punctuation = set(['&', '|', '"', "'", '!'])
         all_punctuation = set(string.punctuation)
@@ -119,40 +122,12 @@ class SearchTerm(models.Model):
         term = term.replace('"', "'")
         term = re.sub(r"[']+", "'", term)
 
-        # Create regex to find strings within quotes.
-        quoted_strings_re = re.compile(r"('[^']*')")
-        space_between_words_re = re.compile(r'([^ &|])[ ]+([^ &|])')
-        spaces_surrounding_letter_re = re.compile(r'[ ]+([^ &|])[ ]+')
-        multiple_operator_re = re.compile(r"[ &]+(&|\|)[ &]+")
+        # if no special characters
+        special = re.compile(r'[&|!]')
+        if not special.search(term):
+            term = re.sub(r'\s+', ' & ', term)
 
-        tokens = quoted_strings_re.split(term)
-        processed_tokens = []
-        for token in tokens:
-            # Remove all surrounding whitespace.
-            token = token.strip()
-
-            if token in ['', "'"]:
-                continue
-
-            if token[0] != "'":
-                # Surround single letters with &'s
-                token = spaces_surrounding_letter_re.sub(r' & \1 & ', token)
-
-                # Specify '&' between words that have neither | or & specified.
-                token = space_between_words_re.sub(r'\1 & \2', token)
-
-                # Add a prefix wildcard to every search term.
-                token = re.sub(r'([^ &|]+)', r'\1:*', token)
-
-            processed_tokens.append(token)
-
-        term = " & ".join(processed_tokens)
-
-        # Replace ampersands or pipes surrounded by ampersands.
-        term = multiple_operator_re.sub(r" \1 ", term)
-
-        # Escape single quotes
-        return term.replace("'", "''")
+        return term
 
 
     @classmethod
@@ -167,12 +142,12 @@ class SearchTerm(models.Model):
 
         """
 
-        search_term = cls._sanitize(keywords)
+        terms = cls._sanitize(keywords)
         cursor = connection.cursor()
         results = []
         try:
-            cursor.execute(_PG_FTSQ.format(MV_NAME, search_term))
-            results = [ row[0] for row in cursor.fetchall() ]
+            cursor.execute(_PG_FTSQ, [terms,])
+            results = [row[0] for row in cursor.fetchall()]
         finally:
             cursor.close()
 

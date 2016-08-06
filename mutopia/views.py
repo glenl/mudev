@@ -3,21 +3,17 @@
 
 """
 
-# -*- coding: utf-8 -*-
+import time
+import datetime
 from django.shortcuts import HttpResponse, render
 from django.template import loader
-from django.http import HttpResponseRedirect
-from django.db import connection, ProgrammingError
+from django.db import ProgrammingError
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Count
 from mutopia.models import Piece, Composer, License, Style, Instrument, Collection
 from mutopia.models import SearchTerm
 from mutopia.forms import KeySearchForm, AdvSearchForm, SearchInterval
 from mutopia.forms import composer_choices, instrument_choices, style_choices
-from mutopia.forms import SearchInterval
-import re
-import time
-import datetime
 
 def homepage(request):
     """
@@ -65,7 +61,7 @@ def adv_search(request):
         'styles': style_choices(),
         'intervals': SearchInterval.INTERVAL_CHOICES,
     }
-    return render(request, 'advsearch.html', context);
+    return render(request, 'advsearch.html', context)
 
 
 def legal(request):
@@ -112,23 +108,23 @@ def browse(request):
     # since the presentation width is specified there.
 
     # collection
-    c = Collection.objects.all()
-    csplit = round(c.count()/2)
+    col = Collection.objects.all()
+    csplit = round(col.count()/2)
     # composers
     comp = Composer.objects.all()
     comps = round(comp.count()/3)
     # styles
-    s = Style.objects.all()
-    ss = round(s.count()/3)
+    style = Style.objects.all()
+    styles = round(style.count()/3)
 
     inst = Instrument.objects.filter(in_mutopia=True)
     insts = round(inst.count()/3)
     context = {
         'keyform': KeySearchForm(auto_id=False),
         'active' : 'browse',
-        'collections': (c[:csplit], c[csplit:],),
+        'collections': (col[:csplit], col[csplit:],),
         'composers': (comp[:comps], comp[comps:(comps+comps)], comp[(comps+comps):],),
-        'styles': (s[:ss], s[ss:(ss+ss)], s[(ss+ss):],),
+        'styles': (style[:styles], style[styles:(styles+styles)], style[(styles+styles):],),
         'instruments': (inst[:insts], inst[insts:(insts+insts)], inst[(insts+insts):],),
     }
     return render(request, 'browse.html', context)
@@ -167,7 +163,7 @@ def key_results(request):
     keywords = request.session.get('keywords', '')
 
     try:
-        q = SearchTerm.search(keywords)
+        query = SearchTerm.search(keywords)
     except ProgrammingError:
         context = {
             'active' : 'None',
@@ -176,7 +172,7 @@ def key_results(request):
         }
         return render(request, 'results.html', context)
 
-    paginator = Paginator(q, 25)
+    paginator = Paginator(query, 25)
     try:
         pieces = paginator.page(page)
     except PageNotAnInteger:
@@ -215,8 +211,8 @@ def adv_results(request):
     page = request.GET.get('page')
     if page is None:
         # reset session data
-        for t in ['searchingfor','composer','style','instrument','lilyversion']:
-            request.session[t] = ''
+        for item in ['searchingfor', 'composer', 'style', 'instrument', 'lilyversion']:
+            request.session[item] = ''
         request.session['time_delta'] = 0
 
         form = AdvSearchForm(request.GET)
@@ -238,37 +234,37 @@ def adv_results(request):
                 # Store the computed time delta in days, not the value
                 # of recent. Note that 'timelength' and 'timeunit'
                 # values should exist per form constraints.
-                td = form.cleaned_data['timelength']
+                time_delta = form.cleaned_data['timelength']
                 if form.cleaned_data['timeunit'] == SearchInterval.WEEK:
-                    td = 7 * td
-                request.session['time_delta'] = td
+                    time_delta = 7 * time_delta
+                request.session['time_delta'] = time_delta
         else:
             pass                # request session will be cleared
 
     # Now walk through the session variables to do the query and
     # filtering.
     if len(request.session['searchingfor']) > 0:
-        q = SearchTerm.search(request.session['searchingfor'])
+        query = SearchTerm.search(request.session['searchingfor'])
     else:
-        q = Piece.objects.all()
+        query = Piece.objects.all()
 
     # Filter on composer, instrument, style, and LilyPond version
     if len(request.session['composer']) > 0:
-        q = q.filter(composer=request.session['composer'])
+        query = query.filter(composer=request.session['composer'])
     if len(request.session['style']) > 0:
-        q = q.filter(style=request.session['style'])
+        query = query.filter(style=request.session['style'])
     if len(request.session['instrument']) > 0:
-        q = q.filter(instruments__pk=request.session['instrument'])
+        query = query.filter(instruments__pk=request.session['instrument'])
     if len(request.session['lilyversion']) > 0:
-        q = q.filter(version__version__startswith=request.session['lilyversion'])
+        query = query.filter(version__version__startswith=request.session['lilyversion'])
 
     # Finally, filter on delta time in days
     if request.session['time_delta'] > 0:
-        td = datetime.timedelta(days=request.session['time_delta'])
-        target = datetime.date.today() - td
-        q = q.filter(date_published__gte=target)
+        time_delta = datetime.timedelta(days=request.session['time_delta'])
+        target = datetime.date.today() - time_delta
+        query = query.filter(date_published__gte=target)
 
-    paginator = Paginator(q, 25)
+    paginator = Paginator(query, 25)
     try:
         pager = paginator.page(page)
     except PageNotAnInteger:
@@ -286,11 +282,11 @@ def adv_results(request):
     return render(request, 'results.html', context)
 
 
-def handler404(request, template_name='404.html'):
+def handler404(_, template_name='404.html'):
     """
     Responds to pages that cannot be located on the server.
     """
-    t = loader.get_template(template_name)
-    response = HttpResponse(t.render({}));
+    template = loader.get_template(template_name)
+    response = HttpResponse(template.render({}))
     response.status_code = 404
     return response

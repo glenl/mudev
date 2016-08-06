@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """These are database update-related model for the |django| ORM. In
 particular, the :class:`mutopia.models.AssetMap` is of interest
 because it additionally functions to translate objects of type
@@ -14,7 +13,9 @@ from mutopia.utils import FTP_URL
 from .models import Piece
 
 class UpdateMarker(models.Model):
-    """Provides for storage of an update time to be used by the update
+    """A persistent timestamp.
+
+    Provides for storage of an timestamp to be used by the update
     process.
 
     """
@@ -58,7 +59,7 @@ class AssetMap(models.Model):
 
     def get_composer(self):
         """Return the composer part of the folder."""
-        return self.folder.split('/',1)[0]
+        return self.folder.split('/', 1)[0]
 
     def get_midi(self):
         """Return a full pathname for midi files."""

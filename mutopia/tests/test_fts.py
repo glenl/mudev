@@ -16,7 +16,7 @@ class FTSTests(TestCase):
 
     def test_fts_search(self):
         # Test diacritically insensitive search
-        p_set = SearchTerm.search('blue')
+        p_set = SearchTerm.search('blues')
         self.assertQuerysetEqual(p_set,
                                  [str(self.p3), str(self.p4)],
                                  transform=str,
