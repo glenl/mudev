@@ -15,18 +15,19 @@ class FTSTests(TestCase):
         init_fts()
 
     def test_fts_search(self):
-        # Test diacritically insensitive search
-        p_set = SearchTerm.search('blues')
-        self.assertQuerysetEqual(p_set,
-                                 [str(self.p3), str(self.p4)],
-                                 transform=str,
-                                 ordered=False)
+        # Test diacritical- and case- insensitive search.
+        expected_blues = [str(self.p3), str(self.p4),]
+        for term in ['blues', 'Blües', 'BLUES']:
+            self.assertQuerysetEqual(SearchTerm.search(term),
+                                     expected_blues,
+                                     transform=str,
+                                     ordered=False)
 
         # This gets some branch coverage into fts language use.
         p_set = SearchTerm.search('suppertime|mountain')
         self.assertEqual(len(p_set), 2)
         self.assertQuerysetEqual(p_set,
-                                 [str(self.p2), str(self.p3)],
+                                 [str(self.p2), str(self.p3),],
                                  transform=str,
                                  ordered=False)
 
