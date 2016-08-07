@@ -36,9 +36,15 @@ class FTSTests(TestCase):
         self.assertQuerysetEqual(p_set,
                                  [str(self.p2)],
                                  transform=str )
+
         # ... so this should return an empty set (but no error)
         p_set = SearchTerm.search('devil swingshift')
         self.assertQuerysetEqual(p_set, [], transform=str )
+
+        # use explicit FTS language to find a blues title without
+        # suppertime in its title.
+        p_set = SearchTerm.search('blues & !suppertime')
+        self.assertQuerysetEqual(p_set, [str(self.p4)], transform=str )
 
         # On bad input, search raises a programming error. Add others
         # here as you like.
