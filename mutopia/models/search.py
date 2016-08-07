@@ -54,11 +54,6 @@ MV_REFRESH = 'REFRESH MATERIALIZED VIEW {0}'
 # FTS is not supported directly in Django so we are going to execute a
 # manual query. This is a format string that is designed to be filled
 # in by a keyword sanitized to form the query.
-p_PG_FTSQ = """
-SELECT piece_id
-   FROM {0}
-   WHERE document @@ to_tsquery('pg_catalog.simple', unaccent('{1}'))
-"""
 _PG_FTSQ = ' '.join([ "SELECT piece_id FROM",
                       MV_NAME,
                       "WHERE document @@ to_tsquery('pg_catalog.simple', unaccent(%s))"])
