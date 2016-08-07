@@ -89,7 +89,9 @@ class SearchTerm(models.Model):
 
     @classmethod
     def refresh_view(cls):
-        """After updates and inserts, the materialized view needs to be
+        """Refresh the associated view.
+
+        After updates and inserts, the materialized view needs to be
         refreshed. We could do this with a trigger but for now it is
         simple enough to do it from this class method after processing
         submissions.
@@ -115,11 +117,10 @@ class SearchTerm(models.Model):
 
         # Substitute all double quotes to single quotes.
         term = term.replace('"', "'")
-        term = re.sub(r"[']+", "'", term)
+        term = re.sub(r"'+", "'", term)
 
-        # if no special characters
-        special = re.compile(r'[&|!]')
-        if not special.search(term):
+        # if no special characters, and search terms together.
+        if not re.search('[&|!]', term):
             term = re.sub(r'\s+', ' & ', term)
 
         return term
