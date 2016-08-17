@@ -5,6 +5,9 @@
 
 import time
 import datetime
+from django.http import JsonResponse
+from django.views.decorators.http import require_safe
+from django.db.models import Max
 from django.shortcuts import HttpResponse, render
 from django.template import loader
 from django.db import ProgrammingError
@@ -280,6 +283,30 @@ def adv_results(request):
         'search_time': '%2.4g' % (end_time - start_time),
     }
     return render(request, 'results.html', context)
+
+
+@require_safe
+def site_status(request):
+    """A request to view the status of the site.
+
+    Return various bits of information about a site in a JSON object.
+    The following example retrieves the last mutopia piece id, ::
+
+      import requests
+      r = requests.head('http://<site>/status/')
+      incoming = json.loads(r.content.decode('utf-8'))
+      print(incoming['LastID'])
+
+    :param request: HTTPRequest object
+    :returns: response object with json content
+    :rtype: JsonResponse
+
+    """
+
+    piecemax = Piece.objects.all().aggregate(Max('piece_id'))
+    next_id = int(piecemax['piece_id__max']) + 1
+    response = JsonResponse({'LastID': piecemax['piece_id__max']})
+    return response
 
 
 def handler404(_, template_name='404.html'):

@@ -1,10 +1,12 @@
+import json
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
 from mutopia.forms import KeySearchForm
 from mutopia.views import handler404, key_results
 from mutopia.models import Composer, Instrument, Style, AssetMap, LPVersion
-from .utilities import load_some_composers, load_some_styles, load_some_instruments
+from .utilities import load_some_composers, load_some_styles
+from .utilities import load_some_instruments
 from .utilities import init_fts, make_piece
 from mudev import urls
 
@@ -21,7 +23,8 @@ class ViewTests(TestCase):
         # the asset map.
         cls.p = make_piece(piece_id=2, title='St. James Infirmary')
         asset = AssetMap.objects.create(piece=cls.p,
-                                        folder='/'.join([str(cls.p.composer), 'various',]),
+                                        folder='/'.join([str(cls.p.composer),
+                                                         'various',]),
                                         name='st-james-infirmary',
                                         has_lys=False)
         asset.save()
@@ -32,6 +35,7 @@ class ViewTests(TestCase):
         request = factory.get('/badurl')
         response = handler404(request)
         self.assertEqual(response.status_code, 404)
+
 
     def check_menu(self, name, template):
         response = self.client.get(reverse(name))
@@ -73,14 +77,16 @@ class ViewTests(TestCase):
         # Just get the first version we find. It has to be there since
         # we created a piece in setup.
         v = LPVersion.objects.all()[0]
-        response = self.client.get(reverse('piece-by-version', args=[v.version]))
+        response = self.client.get(reverse('piece-by-version',
+                                           args=[v.version]))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'piece_version.html')
 
 
     def test_piece_by_composer(self):
         c = Composer.objects.all()[0]
-        response = self.client.get(reverse('piece-by-composer', args=[c.composer]))
+        response = self.client.get(reverse('piece-by-composer',
+                                           args=[c.composer]))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'piece_composer.html')
 
@@ -94,7 +100,8 @@ class ViewTests(TestCase):
 
     def test_piece_by_instrument(self):
         i = Instrument.objects.all()[0]
-        response = self.client.get(reverse('piece-by-instrument', args=[i.instrument]))
+        response = self.client.get(reverse('piece-by-instrument', 
+                                           args=[i.instrument]))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'piece_instrument.html')
 
@@ -103,3 +110,12 @@ class ViewTests(TestCase):
         response = self.client.get(reverse('piece-log', args=[self.p.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'piece_log.html')
+
+
+    def test_status(self):
+        response = self.client.get(reverse('site-status'))
+        self.assertEqual(response.status_code, 200)
+        incoming = json.loads(response.content.decode('utf-8'))
+        self.assertTrue(int(incoming['LastID']) > 0)
+
+        

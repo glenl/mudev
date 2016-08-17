@@ -68,6 +68,9 @@ urlpatterns = [
     url(r'latest/atom/$',
         AtomLatestFeed(),
         name='latest-atom'),
+    url(r'status/$',
+        views.site_status,
+        name='site-status'),
 ]
 
 handler404 = 'mutopia.views.handler404'
